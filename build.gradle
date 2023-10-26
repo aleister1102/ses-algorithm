@@ -10,6 +10,9 @@ repositories {
 }
 
 dependencies {
+    // Import lombok
+    implementation 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
@@ -18,14 +21,23 @@ test {
     useJUnitPlatform()
 }
 
-tasks.register('server', JavaExec) {
-    main = 'org.example.Server'
+tasks.register('process1', JavaExec) {
+    main = 'org.example.Process'
     classpath = sourceSets.main.runtimeClasspath
+    args = ['1']
     standardInput = System.in
 }
 
-tasks.register('client', JavaExec) {
-    main = 'org.example.Client'
+tasks.register('process2', JavaExec) {
+    main = 'org.example.Process'
     classpath = sourceSets.main.runtimeClasspath
+    args = ['2']
+    standardInput = System.in
+}
+
+tasks.register('process3', JavaExec) {
+    main = 'org.example.Process'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['3']
     standardInput = System.in
 }

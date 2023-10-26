@@ -9,21 +9,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientHandler implements Runnable {
-
   public static List<ClientHandler> clientHandlers = new ArrayList<>();
-  private Socket socket;
+
+  private Socket clientSocket;
   private BufferedReader bufferedReader; // for receiving messages
   private BufferedWriter bufferedWriter; // for sending messages
   private String clientUsername;
 
   public ClientHandler(Socket socket) {
     try {
-      this.socket = socket;
-      this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream())); // InputStreamReader is for receiving characters
-      this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())); // OutputStreamWriter is for sending characters
-      this.clientUsername = bufferedReader.readLine();
+      this.clientSocket = socket;
+      this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
       clientHandlers.add(this);
-      broadcastMessage("SERVER: " + clientUsername + " has entered the chat!");
     } catch (IOException exception) {
       removeClientHandler();
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
@@ -40,7 +38,7 @@ public class ClientHandler implements Runnable {
         }
       } catch (IOException exception) {
         removeClientHandler();
-        SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
+        SocketUtil.closeEverything(clientSocket, bufferedReader, bufferedWriter);
       }
     }
   }
@@ -54,13 +52,13 @@ public class ClientHandler implements Runnable {
   public void run() {
     String messageFromClient;
 
-    while (socket.isConnected()) {
+    while (clientSocket.isConnected()) {
       try {
         messageFromClient = bufferedReader.readLine();
         broadcastMessage(messageFromClient);
       } catch (IOException exception) {
         removeClientHandler();
-        SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
+        SocketUtil.closeEverything(clientSocket, bufferedReader, bufferedWriter);
         break;
       }
     }

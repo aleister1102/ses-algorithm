@@ -8,10 +8,10 @@ public class Logger {
 
   public static String toStringWithTimestamp(String message, Timestamp timestamp) {
     return "[" +
-            timestamp.toLocalDateTime() +
-            "] - " +
-            message +
-            "\n";
+        timestamp.toLocalDateTime() +
+        "] - " +
+        message +
+        "\n";
   }
 
   public static void logWithCurrentTimeStamp(String message) {
@@ -25,6 +25,10 @@ public class Logger {
 
   public static void log(String message) {
     System.out.println(message);
+  }
+
+  public static void log(String format, Object... args) {
+    log(String.format(format, args));
   }
 
   public static void logAndWriteWithTimeStamp(String message, Timestamp timestamp) {
