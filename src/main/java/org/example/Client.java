@@ -10,7 +10,7 @@ public class Client {
   private BufferedReader bufferedReader; // for reading message from server
   private BufferedWriter bufferedWriter; // for sending message to server
 
-  private static int messageCounter = 1;
+  private static int NUMBER_OF_MESSAGES = 10;
 
   public Client(Socket socket) {
     try {
@@ -25,9 +25,11 @@ public class Client {
   public void send() {
     try {
       if (socket.isConnected()) {
-        bufferedWriter.write(String.format("[message %s]", messageCounter));
-        bufferedWriter.newLine();
-        bufferedWriter.flush();
+        for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
+          bufferedWriter.write(String.format("[message %s]", i));
+          bufferedWriter.newLine();
+          bufferedWriter.flush();
+        }
       }
     } catch (IOException exception) {
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);

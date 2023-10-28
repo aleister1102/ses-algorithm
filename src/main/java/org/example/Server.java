@@ -67,12 +67,15 @@ public class Server {
       while (clientSocket.isConnected()) {
         try {
           messageFromClient = bufferedReader.readLine();
-          Logger.log("Message received from client with port %s: %s",
-              clientSocket.getPort(),
-              messageFromClient);
+          if (messageFromClient != null)
+            Logger.log("Message received from client with port %s: %s",
+                clientSocket.getPort(),
+                messageFromClient);
+          else
+            break;
         } catch (IOException e) {
-          clientHandlers.remove(this);
           SocketUtil.closeEverything(clientSocket, bufferedReader, bufferedWriter);
+          clientHandlers.remove(this);
         }
       }
     }
