@@ -1,12 +1,10 @@
 package org.example;
 
 import java.net.*;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 import org.example.constants.Configuration;
+import org.example.models.VectorClock;
 import org.example.utils.LogUtil;
 import org.example.utils.SocketUtil;
 
@@ -18,6 +16,9 @@ public class Process {
   private int port;
   private ServerSocket serverSocket;
   private List<Client> clients;
+
+  public static final ArrayList<Integer> timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
+  public static final ArrayList<VectorClock> vectorClocks = new ArrayList<>();
 
   public Process(int port) {
     this.port = port;

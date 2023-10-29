@@ -1,12 +1,14 @@
 package org.example.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.sql.Timestamp;
 
 public class LogUtil {
 
   public static String toStringWithTimestamp(String message, Timestamp timestamp) {
     return "[" +
-            timestamp.toLocalDateTime() +
+            StringUtils.rightPad(timestamp.toLocalDateTime().toString(), 23, "0") +
             "] - " +
             message +
             "\n";

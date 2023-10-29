@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.constants.Configuration;
 import org.example.models.Message;
+import org.example.models.VectorClock;
 import org.example.utils.FileUtil;
 import org.example.utils.LogUtil;
 import org.example.utils.SocketUtil;
@@ -30,7 +31,8 @@ public class Server {
         LogUtil.log("A client is connected to the server! Client port: %s", clientSocket.getPort());
 
         // Create a new thread for handling the client
-        new Thread(clientHandler).start();
+        Thread listenerThread = new Thread(clientHandler);
+        listenerThread.start();
       }
     } catch (IOException exception) {
       close(serverSocket);
@@ -78,16 +80,20 @@ public class Server {
               Message message = objectMapper.readValue(messageFromClient, Message.class);
               int senderPort = message.getSenderPort();
 
+              // Increment and update the timestamp vector
+              int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
+              VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+
               // Add message to list
               messages.add(message);
 
               // Log and write message content
               logAndWriteMessage(message, logFile);
 
-              // If the message is the last one, terminate listener
+              // If the message is the last one, close the socket
               if (hasReceivedAllMessages(senderPort)) {
                 LogUtil.logWithCurrentTimeStamp(String.format("Received all messages from port %s", senderPort));
-                Thread.currentThread().interrupt();
+                //TODO: close the socket and terminate thread
               }
             } catch (JsonProcessingException e) {
               LogUtil.log("An error occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageFromClient, e.getMessage());

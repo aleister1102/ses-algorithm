@@ -4,24 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: random number of messages per minute and write log">
-      <change afterPath="$PROJECT_DIR$/logs/process-1.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/logs/process-2.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/logs/process-3.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/models/Message.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/models/ProcessTimestampVector.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/FileUtil.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: increment timestamp vector when receive messages">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/process-1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-1.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/process-2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-2.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/process-3.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-3.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ClientHandler.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Process.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Process.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/Logger.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/SocketUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/SocketUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -188,6 +181,8 @@
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="feat: add Process.java" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: add Process.java" />
+    <MESSAGE value="feat: implement incremental vector clock" />
+    <MESSAGE value="feat: increment timestamp vector when receive messages" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: increment timestamp vector when receive messages" />
   </component>
 </project>

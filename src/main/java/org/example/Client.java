@@ -9,8 +9,6 @@ import org.example.utils.SocketUtil;
 import java.io.*;
 import java.net.Socket;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class Client {
   private int senderPort;
@@ -19,11 +17,6 @@ public class Client {
   private BufferedReader bufferedReader; // for reading message from server
   private BufferedWriter bufferedWriter; // for sending message to server
 
-  private static final ArrayList<Integer> timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
-  private int indexInTimestampVector;
-  private static final ArrayList<VectorClock> vectorClocks = new ArrayList<>();
-
-
   public Client(int senderPort, int receiverPort, Socket socket) {
     try {
       this.senderPort = senderPort;
@@ -31,18 +24,9 @@ public class Client {
       this.socket = socket;
       this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-      this.indexInTimestampVector = getIndexInTimestampVector();
     } catch (IOException exception) {
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
     }
-  }
-
-  private int getIndexInTimestampVector() {
-    for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
-      if (this.senderPort == Configuration.PORTS[i])
-        return i;
-    }
-    return -1;
   }
 
   public void send() {
@@ -55,9 +39,10 @@ public class Client {
         LogUtil.log("Sleep time between messages: %s ms", sleepTime);
 
         for (int i = 1; i <= Configuration.NUMBER_OF_MESSAGES; i++) {
-          // Increment the timestamp vector
-          VectorClock.incrementAt(timestampVector, indexInTimestampVector);
-          VectorClock.updateTimestampVectorInList(vectorClocks, receiverPort, timestampVector);
+          // Increment and update the timestamp vector
+          int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
+          VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+          VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, Process.timestampVector);
 
           // Build the message
           Message message = buildMessageByIndex(i);
@@ -92,7 +77,7 @@ public class Client {
             .receiverPort(receiverPort)
             .content(content)
             .timestamp(timestamp)
-            .vectorClocks(vectorClocks)
+            .vectorClocks(Process.vectorClocks)
             .build();
   }
 }
