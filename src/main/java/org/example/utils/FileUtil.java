@@ -11,8 +11,6 @@ public class FileUtil {
     try {
       if (file.createNewFile()) {
         System.out.println("File created: " + file.getName());
-      } else {
-        System.out.println("File already exists.");
       }
     } catch (IOException e) {
       System.out.println("An error occurred while creating file: " + e.getMessage());
@@ -25,7 +23,7 @@ public class FileUtil {
     return file;
   }
 
-  public static synchronized void clearFile(File file) {
+  public static void clearFile(File file) {
     try {
       if (!file.exists()) return;
       if (alreadyCleared) return;
@@ -39,13 +37,10 @@ public class FileUtil {
     }
   }
 
-  public static void writeLog(String log, File logFile) {
-    try {
-      FileWriter writer = new FileWriter(logFile, true); // append to file (not overwrite)
-      writer.write(log);
-      writer.close();
-    } catch (IOException e) {
-      System.out.println("An error have been occurred while writing log to file: " + e.getMessage());
-    }
+  public static File setupLogFile(int port) {
+    String logFileName = String.format("logs/process-%s.txt", port);
+    File logFile = FileUtil.createFile(logFileName);
+    FileUtil.clearFile(logFile);
+    return logFile;
   }
 }

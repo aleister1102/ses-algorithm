@@ -68,7 +68,7 @@ public class Server {
     @Override
     public void run() {
       String messageFromClient;
-      File logFile = setupLogFile();
+      File logFile = FileUtil.setupLogFile(this.port);
 
       while (clientSocket.isConnected()) {
         try {
@@ -88,7 +88,7 @@ public class Server {
               messages.add(message);
 
               // Log and write message content
-              logAndWriteMessage(message, logFile);
+              LogUtil.logAndWriteToFile(message, logFile);
 
               // If the message is the last one, close the socket
               if (hasReceivedAllMessages(senderPort)) {
@@ -105,19 +105,6 @@ public class Server {
           clientHandlers.remove(this);
         }
       }
-    }
-
-    private File setupLogFile() {
-      String logFileName = String.format("logs/process-%s.txt", port);
-      File logFile = FileUtil.createFile(logFileName);
-      FileUtil.clearFile(logFile);
-      return logFile;
-    }
-
-    private void logAndWriteMessage(Message message, File logFile) {
-      String log = LogUtil.toStringWithCurrentTimeStamp(message.toLog());
-      LogUtil.log(log);
-      FileUtil.writeLog(log, logFile);
     }
 
     private boolean hasReceivedAllMessages(int senderPort) {

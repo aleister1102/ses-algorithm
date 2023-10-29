@@ -6,15 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: increment timestamp vector when receive messages">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/process-1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-1.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/process-2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-2.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/process-3.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-3.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Process.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Process.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Server.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/FileUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/FileUtil.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

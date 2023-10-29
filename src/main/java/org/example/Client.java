@@ -3,6 +3,7 @@ package org.example;
 import org.example.constants.Configuration;
 import org.example.models.Message;
 import org.example.models.VectorClock;
+import org.example.utils.FileUtil;
 import org.example.utils.LogUtil;
 import org.example.utils.SocketUtil;
 
@@ -30,6 +31,8 @@ public class Client {
   }
 
   public void send() {
+    File logFile = FileUtil.setupLogFile(senderPort);
+
     try {
       if (socket.isConnected()) {
         int numberOfMessagesPerMinute = randomNumberOfMessagesPerMinute();
@@ -38,14 +41,17 @@ public class Client {
         LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
         LogUtil.log("Sleep time between messages: %s ms", sleepTime);
 
-        for (int i = 1; i <= Configuration.NUMBER_OF_MESSAGES; i++) {
+        for (int messageIndex = 1; messageIndex <= Configuration.NUMBER_OF_MESSAGES; messageIndex++) {
           // Increment and update the timestamp vector
           int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
           VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
           VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, Process.timestampVector);
 
           // Build the message
-          Message message = buildMessageByIndex(i);
+          Message message = buildMessageByIndex(messageIndex);
+
+          // Log and write the sending message
+          LogUtil.logAndWriteToFile(message, logFile);
 
           // Send the message
           bufferedWriter.write(message.toString());

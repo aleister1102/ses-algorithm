@@ -66,7 +66,6 @@ public class Process {
       for (Client client : process.getClients()) {
         new Thread(client::send).start();
       }
-      LogUtil.logWithCurrentTimeStamp("Finished sending messages");
     }
   }
 }
