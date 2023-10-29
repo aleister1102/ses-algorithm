@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-import org.example.utils.Logger;
+import org.example.constants.Configuration;
+import org.example.utils.LogUtil;
 import org.example.utils.SocketUtil;
+
 
 import lombok.Data;
 
@@ -16,8 +18,6 @@ public class Process {
   private int port;
   private ServerSocket serverSocket;
   private List<Client> clients;
-
-  private static final int[] ports = { 1, 2, 3 };
 
   public Process(int port) {
     this.port = port;
@@ -38,40 +38,34 @@ public class Process {
     Process process = new Process(port);
     Scanner scanner = new Scanner(System.in);
 
-    // Create a server if server socket is created successfully
+    // Create a server if the server socket is created successfully
     if (process.getServerSocket() != null) {
       Server server = new Server(process.getServerSocket());
 
       // Open for connections
-      new Thread(() -> {
-        server.open();
-      }).start();
+      new Thread(server::open).start();
 
-      Logger.log("Press any key to connect to other processes");
+      // Wait for all processes to be connected
+      LogUtil.log("Press any key to send messages");
       scanner.nextLine();
 
       // Create a client for each existing port (except the current port)
-      for (int existingPort : ports) {
+      for (int existingPort : Configuration.PORTS) {
         if (existingPort != port) {
-          Logger.log("Creating a client for port %s", existingPort);
+          LogUtil.log("Creating a client for port %s", existingPort);
           Socket socket = SocketUtil.createClientSocket(existingPort);
-          Client client = new Client(socket);
-          process.addClient(client);
+          if (socket != null) {
+            Client client = new Client(port, existingPort, socket);
+            process.addClient(client);
+          }
         }
       }
 
-      Logger.log("Sending messages to other processes in 5 seconds...");
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-
-      // Loop over clients and send a message to each one
+      // All processes are connected, send messages
       for (Client client : process.getClients()) {
-        client.send();
+        new Thread(client::send).start();
       }
-
+      LogUtil.logWithCurrentTimeStamp("Finished sending messages");
     }
   }
 }

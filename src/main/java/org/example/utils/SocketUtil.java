@@ -10,20 +10,19 @@ public class SocketUtil {
   public static ServerSocket createServerSocket(int port) {
     try {
       ServerSocket serverSocket = new ServerSocket(port);
-      Logger.log("Server socket is created on port %s", port);
+      LogUtil.log("Server socket is created on port %s", port);
       return serverSocket;
     } catch (IOException e) {
-      Logger.log("Port %s is already in use", port);
+      LogUtil.log("Port %s is already in use", port);
       return null;
     }
   }
 
   public static Socket createClientSocket(int port) {
     try {
-      Socket socket = new Socket("localhost", port);
-      return socket;
+      return new Socket("localhost", port);
     } catch (IOException e) {
-      Logger.log("An error occured when connecting to port %s: %s", port, e.getMessage());
+      LogUtil.log("An error occurred when connecting to port %s: %s", port, e.getMessage());
       return null;
     }
   }
@@ -40,7 +39,7 @@ public class SocketUtil {
         socket.close(); // also close the input and output stream
       }
     } catch (IOException exception) {
-      exception.printStackTrace();
+      LogUtil.log("An error occurred while closing the socket: %s", exception.getMessage());
     }
   }
 }
