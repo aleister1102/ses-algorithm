@@ -69,6 +69,7 @@ public class Server {
     public void run() {
       String messageFromClient;
       File logFile = FileUtil.setupLogFile(this.port);
+      File centralLogFile = FileUtil.setupCentralLogFile();
 
       while (clientSocket.isConnected()) {
         try {
@@ -91,7 +92,10 @@ public class Server {
                 messages.add(message);
 
                 // Log and write message content
-                LogUtil.logAndWriteToFileWithTimestampVector(message, Process.timestampVector, logFile);
+                String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), Process.timestampVector);
+                LogUtil.log(logMessage);
+                LogUtil.writeLogToFile(logMessage, logFile);
+                LogUtil.writeLogToFile(logMessage, centralLogFile);
               }
             } catch (JsonProcessingException e) {
               LogUtil.log("An error occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageFromClient, e.getMessage());

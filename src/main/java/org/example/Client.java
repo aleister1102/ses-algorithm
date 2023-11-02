@@ -35,6 +35,7 @@ public class Client {
 
   public void send(int numberOfMessages, int... delays) {
     File logFile = FileUtil.setupLogFile(senderPort);
+    File centralLogFile = FileUtil.setupCentralLogFile();
 
     try {
       if (socket.isConnected()) {
@@ -55,7 +56,10 @@ public class Client {
             message = buildMessage(messageIndex, currentTimestampVector, currentVectorClocks);
 
             // Log and write the sending message
-            LogUtil.logAndWriteToFileWithTimestampVector(message, currentTimestampVector, logFile);
+            String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), currentTimestampVector);
+            LogUtil.log(logMessage);
+            LogUtil.writeLogToFile(logMessage, logFile);
+            LogUtil.writeLogToFile(logMessage, centralLogFile);
 
             // Save the vector clock of the previous message
             VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, currentTimestampVector);

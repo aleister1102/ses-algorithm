@@ -7,6 +7,9 @@ import java.io.IOException;
 public class FileUtil {
   private static boolean alreadyCleared = false;
 
+  public static final String CENTRAL_LOG_FILE = "logs/central-logs.txt";
+
+
   public static void createFile(File file) {
     try {
       if (file.createNewFile()) {
@@ -40,6 +43,12 @@ public class FileUtil {
   public static File setupLogFile(int port) {
     String logFileName = String.format("logs/process-%s.txt", port);
     File logFile = FileUtil.createFile(logFileName);
+    FileUtil.clearFile(logFile);
+    return logFile;
+  }
+
+  public static File setupCentralLogFile() {
+    File logFile = FileUtil.createFile(CENTRAL_LOG_FILE);
     FileUtil.clearFile(logFile);
     return logFile;
   }

@@ -1,6 +1,7 @@
 package org.example.utils;
 
 import org.apache.commons.lang3.StringUtils;
+import org.example.constants.Configuration;
 import org.example.models.Message;
 
 import java.io.File;
@@ -14,13 +15,7 @@ public class LogUtil {
     return timeStampVector + " - " + message + "\n";
   }
 
-  public static void logAndWriteToFileWithTimestampVector(Message message, ArrayList<Integer> timestampVector, File logFile) {
-    String log = LogUtil.toStringWithTimestampVector(message.toLog(), timestampVector);
-    LogUtil.log(log);
-    writeLogToFile(log, logFile);
-  }
-
-  private static void writeLogToFile(String log, File logFile) {
+  public static void writeLogToFile(String log, File logFile) {
     try {
       FileWriter writer = new FileWriter(logFile, true); // append to file (not overwrite)
       writer.write(log);
