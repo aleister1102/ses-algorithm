@@ -45,13 +45,11 @@ public class VectorClock {
     return true;
   }
 
-  public static ArrayList<Integer> max(ArrayList<Integer> timestampVector1, ArrayList<Integer> timestampVector2) {
-    ArrayList<Integer> maxTimestampVector = new ArrayList<>(Collections.nCopies(10, 0));
-    for (int i = 0; i < timestampVector1.size(); i++) {
-      int maxTimestamp = Math.max(timestampVector1.get(i), timestampVector2.get(i));
-      maxTimestampVector.set(i, maxTimestamp);
+  public static void merge(ArrayList<Integer> source, ArrayList<Integer> destination) {
+    for (int i = 0; i < source.size(); i++) {
+      int maxTimestamp = Math.max(source.get(i), destination.get(i));
+      destination.set(i, maxTimestamp);
     }
-    return maxTimestampVector;
   }
 
   public String toString() {

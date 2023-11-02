@@ -20,6 +20,7 @@ public class Message {
   private int receiverPort;
   private String content;
   private Timestamp timestamp;
+  private ArrayList<Integer> timestampVector;
   private ArrayList<VectorClock> vectorClocks;
 
   public String toString() {
@@ -33,6 +34,12 @@ public class Message {
   }
 
   public String toLog() {
-    return String.format("[P%s -> P%s]: %s (timestamp: %s, vector clocks: %s)", senderPort, receiverPort, content, timestamp, vectorClocks.toString());
+    return String.format("[P%s -> P%s]: %s (timestamp: %s, timestampVector: %s, vector clocks: %s)",
+            senderPort,
+            receiverPort,
+            content,
+            timestamp,
+            timestampVector.toString(),
+            vectorClocks.toString());
   }
 }

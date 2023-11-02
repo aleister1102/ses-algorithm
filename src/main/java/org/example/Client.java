@@ -11,6 +11,7 @@ import org.example.utils.SocketUtil;
 import java.io.*;
 import java.net.Socket;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 @Data
 public class Client {
@@ -39,21 +40,25 @@ public class Client {
       if (socket.isConnected()) {
         LogUtil.log("Sending %s message(s) to port %s", numberOfMessages, receiverPort);
 
-        Message message;
         for (int messageIndex = 1; messageIndex <= numberOfMessages; messageIndex++) {
+          Message message;
           synchronized (Process.timestampVector) {
             // Increment and update the timestamp vector
             int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
             VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
 
+            // Get the current timestamp vector and the current vector clocks - why need this?
+            ArrayList<Integer> currentTimestampVector = new ArrayList<>(Process.timestampVector);
+            ArrayList<VectorClock> currentVectorClocks = new ArrayList<>(Process.vectorClocks);
+
             // Build the message
-            message = buildMessageByIndex(messageIndex);
+            message = buildMessage(messageIndex, currentTimestampVector, currentVectorClocks);
 
             // Log and write the sending message
-            LogUtil.logAndWriteToFileWithTimestampVector(message, Process.timestampVector, logFile);
+            LogUtil.logAndWriteToFileWithTimestampVector(message, currentTimestampVector, logFile);
 
             // Save the vector clock of the previous message
-            VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, Process.timestampVector);
+            VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, currentTimestampVector);
           }
 
           Thread.sleep(delays[messageIndex - 1]);
@@ -69,7 +74,7 @@ public class Client {
     }
   }
 
-  private Message buildMessageByIndex(int messageIndex) {
+  private Message buildMessage(int messageIndex, ArrayList<Integer> timestampVector, ArrayList<VectorClock> vectorClocks) {
     String content = String.format("[message %s]", messageIndex);
     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
     return Message.builder()
@@ -77,7 +82,8 @@ public class Client {
             .receiverPort(receiverPort)
             .content(content)
             .timestamp(timestamp)
-            .vectorClocks(Process.vectorClocks)
+            .timestampVector(timestampVector)
+            .vectorClocks(vectorClocks)
             .build();
   }
 }

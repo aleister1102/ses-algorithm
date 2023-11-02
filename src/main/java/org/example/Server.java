@@ -12,6 +12,7 @@ import org.example.utils.SocketUtil;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -77,13 +78,14 @@ public class Server {
               // Parse json string to message object
               ObjectMapper objectMapper = new ObjectMapper();
               Message message = objectMapper.readValue(messageFromClient, Message.class);
-              int senderPort = message.getSenderPort();
               int receiverPort = message.getReceiverPort();
+              ArrayList<Integer> timestampVector = message.getTimestampVector();
 
               synchronized (Process.timestampVector) {
                 // Increment and update the timestamp vector
                 int indexInTimestampVector = Configuration.getIndexInTimestampVector(receiverPort);
                 VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+                VectorClock.merge(timestampVector, Process.timestampVector);
 
                 // Add message to list
                 messages.add(message);

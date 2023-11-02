@@ -4,18 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: log when sending messages">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/ThreadUtil.java" afterDir="false" />
+    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: simulate the example">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/process-1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-1.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/process-2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-2.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/process-3.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-3.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Process.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Process.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/models/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/models/Message.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/models/VectorClock.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/models/VectorClock.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -188,6 +185,7 @@
     <MESSAGE value="feat: implement incremental vector clock" />
     <MESSAGE value="feat: increment timestamp vector when receive messages" />
     <MESSAGE value="feat: log when sending messages" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: log when sending messages" />
+    <MESSAGE value="feat: simulate the example" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: simulate the example" />
   </component>
 </project>
