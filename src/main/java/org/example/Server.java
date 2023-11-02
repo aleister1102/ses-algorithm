@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class Server {
   private final ServerSocket serverSocket;
@@ -48,7 +49,7 @@ public class Server {
     private Socket clientSocket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private final List<Message> messages = new LinkedList<>();
+    private final List<Message> buffer = new LinkedList<>();
     private static final List<ClientHandler> clientHandlers = new LinkedList<>();
 
     public ClientHandler(int port, Socket clientSocket) {
@@ -79,24 +80,11 @@ public class Server {
               // Parse json string to message object
               ObjectMapper objectMapper = new ObjectMapper();
               Message message = objectMapper.readValue(messageFromClient, Message.class);
-              int receiverPort = message.getReceiverPort();
-              ArrayList<Integer> timestampVector = message.getTimestampVector();
 
-              synchronized (Process.timestampVector) {
-                // Increment and update the timestamp vector
-                int indexInTimestampVector = Configuration.getIndexInTimestampVector(receiverPort);
-                VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
-                VectorClock.merge(timestampVector, Process.timestampVector);
+              boolean canDeliver = canDeliver(message);
+              if (canDeliver)
+                deliver(message, logFile, centralLogFile);
 
-                // Add message to list
-                messages.add(message);
-
-                // Log and write message content
-                String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), Process.timestampVector);
-                LogUtil.log(logMessage);
-                LogUtil.writeLogToFile(logMessage, logFile);
-                LogUtil.writeLogToFile(logMessage, centralLogFile);
-              }
             } catch (JsonProcessingException e) {
               LogUtil.log("An error occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageFromClient, e.getMessage());
             }
@@ -108,6 +96,57 @@ public class Server {
         }
       }
     }
+
+    private boolean canDeliver(Message message) {
+      ArrayList<VectorClock> vectorClocks = message.getVectorClocks();
+      Optional<ArrayList<Integer>> optionalTimestampVector = vectorClocks.stream()
+              .filter(clock -> clock.getPort() == port)
+              .map(VectorClock::getTimestampVector)
+              .findFirst();
+
+      if (optionalTimestampVector.isPresent()) {
+        // Check whether the timestamp vector in the vector clock is less than or equal the timestamp vector of the current process
+        if (VectorClock.isLessThanOrEqual(message.getTimestampVector(), Process.timestampVector)) {
+          return true; // then deliver it
+        } else {
+          buffer.add(message); // else buffer it
+          LogUtil.log("Message %s is buffered\n", message.toLog());
+          return false;
+        }
+      } else {
+        return true;
+      }
+    }
+
+    private void deliver(Message message, File logFile, File centralLogFile) {
+      int receiverPort = message.getReceiverPort();
+      ArrayList<Integer> timestampVector = message.getTimestampVector();
+
+      synchronized (Process.timestampVector) {
+        // Increment and update the timestamp vector
+        int indexInTimestampVector = Configuration.getIndexInTimestampVector(receiverPort);
+        VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+        VectorClock.merge(timestampVector, Process.timestampVector);
+
+        // Log and write message content
+        String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), Process.timestampVector);
+        LogUtil.log(logMessage);
+        LogUtil.writeLogToFile(logMessage, logFile);
+        LogUtil.writeLogToFile(logMessage, centralLogFile);
+
+        // Deliver message(s) in the buffer that can be delivered
+//        deliverMessageFromBuffer(logFile, centralLogFile);
+      }
+    }
+
+//    private void deliverMessageFromBuffer(File logFile, File centralLogFile) {
+//      for (Message message : buffer) {
+//        if (VectorClock.isLessThanOrEqual(message.getTimestampVector(), Process.timestampVector)) {
+//          buffer.remove(message);
+//          deliver(message, logFile, centralLogFile);
+//        }
+//      }
+//    }
   }
 
   private void close(Closeable socket) {

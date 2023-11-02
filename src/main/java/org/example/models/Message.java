@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.example.utils.LogUtil;
 
 import java.sql.Timestamp;
@@ -38,7 +39,7 @@ public class Message {
             senderPort,
             receiverPort,
             content,
-            timestamp,
+            StringUtils.rightPad(timestamp.toString(), 23, '0'),
             timestampVector.toString(),
             vectorClocks.toString());
   }

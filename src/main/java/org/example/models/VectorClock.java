@@ -38,9 +38,9 @@ public class VectorClock {
     );
   }
 
-  public boolean isLessThanOrEqual(ArrayList<Integer> otherTimestampVector) {
+  public static boolean isLessThanOrEqual(ArrayList<Integer> timestampVector, ArrayList<Integer> otherTimestampVector) {
     for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
-      if (this.timestampVector.get(i) > otherTimestampVector.get(i)) return false;
+      if (timestampVector.get(i) > otherTimestampVector.get(i)) return false;
     }
     return true;
   }
