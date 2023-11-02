@@ -31,8 +31,7 @@ public class Server {
         LogUtil.log("A client is connected to the server! Client port: %s", clientSocket.getPort());
 
         // Create a new thread for handling the client
-        Thread listenerThread = new Thread(clientHandler);
-        listenerThread.start();
+        new Thread(clientHandler).start();
       }
     } catch (IOException exception) {
       close(serverSocket);
@@ -79,21 +78,18 @@ public class Server {
               ObjectMapper objectMapper = new ObjectMapper();
               Message message = objectMapper.readValue(messageFromClient, Message.class);
               int senderPort = message.getSenderPort();
+              int receiverPort = message.getReceiverPort();
 
-              // Increment and update the timestamp vector
-              int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
-              VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+              synchronized (Process.timestampVector) {
+                // Increment and update the timestamp vector
+                int indexInTimestampVector = Configuration.getIndexInTimestampVector(receiverPort);
+                VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
 
-              // Add message to list
-              messages.add(message);
+                // Add message to list
+                messages.add(message);
 
-              // Log and write message content
-              LogUtil.logAndWriteToFile(message, logFile);
-
-              // If the message is the last one, close the socket
-              if (hasReceivedAllMessages(senderPort)) {
-                LogUtil.logWithCurrentTimeStamp(String.format("Received all messages from port %s", senderPort));
-                //TODO: close the socket and terminate thread
+                // Log and write message content
+                LogUtil.logAndWriteToFileWithTimestampVector(message, Process.timestampVector, logFile);
               }
             } catch (JsonProcessingException e) {
               LogUtil.log("An error occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageFromClient, e.getMessage());
@@ -105,12 +101,6 @@ public class Server {
           clientHandlers.remove(this);
         }
       }
-    }
-
-    private boolean hasReceivedAllMessages(int senderPort) {
-      LogUtil.log("Number of messages received from port %s: %s", senderPort, messages.size());
-      LogUtil.log("Number of messages expected from port %s: %s", senderPort, Configuration.NUMBER_OF_MESSAGES); // in each thread
-      return messages.size() == Configuration.NUMBER_OF_MESSAGES;
     }
   }
 

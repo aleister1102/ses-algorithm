@@ -20,7 +20,7 @@ public class Message {
   private int receiverPort;
   private String content;
   private Timestamp timestamp;
-  private  ArrayList<VectorClock> vectorClocks;
+  private ArrayList<VectorClock> vectorClocks;
 
   public String toString() {
     try {

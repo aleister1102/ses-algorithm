@@ -1,5 +1,6 @@
 package org.example;
 
+import lombok.Data;
 import org.example.constants.Configuration;
 import org.example.models.Message;
 import org.example.models.VectorClock;
@@ -11,6 +12,7 @@ import java.io.*;
 import java.net.Socket;
 import java.sql.Timestamp;
 
+@Data
 public class Client {
   private int senderPort;
   private int receiverPort;
@@ -30,50 +32,42 @@ public class Client {
     }
   }
 
-  public void send() {
+  public void send(int numberOfMessages, int... delays) {
     File logFile = FileUtil.setupLogFile(senderPort);
 
     try {
       if (socket.isConnected()) {
-        int numberOfMessagesPerMinute = randomNumberOfMessagesPerMinute();
-        int sleepTime = calculateSleepTime(numberOfMessagesPerMinute);
-        LogUtil.log("Sending %s messages to port %s", Configuration.NUMBER_OF_MESSAGES, receiverPort);
-        LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
-        LogUtil.log("Sleep time between messages: %s ms", sleepTime);
+        LogUtil.log("Sending %s message(s) to port %s", numberOfMessages, receiverPort);
 
-        for (int messageIndex = 1; messageIndex <= Configuration.NUMBER_OF_MESSAGES; messageIndex++) {
-          // Increment and update the timestamp vector
-          int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
-          VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
-          VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, Process.timestampVector);
+        Message message;
+        for (int messageIndex = 1; messageIndex <= numberOfMessages; messageIndex++) {
+          synchronized (Process.timestampVector) {
+            // Increment and update the timestamp vector
+            int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
+            VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
 
-          // Build the message
-          Message message = buildMessageByIndex(messageIndex);
+            // Build the message
+            message = buildMessageByIndex(messageIndex);
 
-          // Log and write the sending message
-          LogUtil.logAndWriteToFile(message, logFile);
+            // Log and write the sending message
+            LogUtil.logAndWriteToFileWithTimestampVector(message, Process.timestampVector, logFile);
+
+            // Save the vector clock of the previous message
+            VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, Process.timestampVector);
+          }
+
+          Thread.sleep(delays[messageIndex - 1]);
 
           // Send the message
           bufferedWriter.write(message.toString());
           bufferedWriter.newLine();
           bufferedWriter.flush();
-
-          Thread.sleep(sleepTime);
         }
       }
     } catch (IOException | InterruptedException exception) {
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
     }
   }
-
-  private int randomNumberOfMessagesPerMinute() {
-    return (int) (Math.random() * (Configuration.NUMBER_OF_MESSAGES - 10 + 1) + 10); // from 10 to NUMBER_OF_MESSAGES
-  }
-
-  private int calculateSleepTime(int numberOfMessagesPerMinute) {
-    return 60000 / numberOfMessagesPerMinute; // 60000 ms = 1 minute
-  }
-
 
   private Message buildMessageByIndex(int messageIndex) {
     String content = String.format("[message %s]", messageIndex);
