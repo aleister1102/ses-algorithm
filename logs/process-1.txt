@@ -1,2 +1,0 @@
-[1, 1, 0] - [P2 -> P1]: [message 1] (timestamp: 2023-11-02 23:16:23.422, timestampVector: [0, 1, 0], vector clocks: [])
-[2, 2, 2] - [P3 -> P1]: [message 1] (timestamp: 2023-11-02 23:16:27.641, timestampVector: [0, 2, 2], vector clocks: [])

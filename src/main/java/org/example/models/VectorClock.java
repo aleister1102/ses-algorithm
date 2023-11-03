@@ -7,8 +7,9 @@ import lombok.NoArgsConstructor;
 import org.example.constants.Configuration;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Vector;
 
 @Data
 @Builder
@@ -16,43 +17,53 @@ import java.util.Optional;
 @NoArgsConstructor
 public class VectorClock {
   private int port;
-  private ArrayList<Integer> timestampVector;
+  private List<Integer> timestampVector;
 
-  public static void incrementAt(ArrayList<Integer> timestampVector, int index) {
+  public static void incrementAt(List<Integer> timestampVector, int index) {
     timestampVector.set(index, timestampVector.get(index) + 1);
   }
 
-  private static VectorClock findByReceiverPort(ArrayList<VectorClock> vectorClocks, int receiverPort) {
+  private static VectorClock findByReceiverPort(List<VectorClock> vectorClocks, int receiverPort) {
     return vectorClocks
-            .stream()
-            .filter(vectorClock -> vectorClock.getPort() == receiverPort)
-            .findFirst()
-            .orElse(null);
+        .stream()
+        .filter(vectorClock -> vectorClock.getPort() == receiverPort)
+        .findFirst()
+        .orElse(null);
   }
 
-  public static void updateTimestampVectorInList(ArrayList<VectorClock> vectorClocks, int receiverPort, ArrayList<Integer> timestampVector) {
+  public static void updateTimestampVectorInList(List<VectorClock> vectorClocks, int receiverPort,
+      List<Integer> timestampVector) {
     VectorClock vectorClock = findByReceiverPort(vectorClocks, receiverPort);
     Optional.ofNullable(vectorClock).ifPresentOrElse(
-            vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
-            () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build())
-    );
+        vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
+        () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build()));
   }
 
-  public static boolean isLessThanOrEqual(ArrayList<Integer> timestampVector, ArrayList<Integer> otherTimestampVector) {
+  public static boolean isLessThanOrEqual(List<Integer> timestampVector, List<Integer> otherTimestampVector) {
     for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
-      if (timestampVector.get(i) > otherTimestampVector.get(i)) return false;
+      if (timestampVector.get(i) > otherTimestampVector.get(i))
+        return false;
     }
     return true;
   }
 
-  public static void merge(ArrayList<Integer> source, ArrayList<Integer> destination) {
+  public static void mergeTimestampVector(List<Integer> source, List<Integer> destination) {
     for (int i = 0; i < source.size(); i++) {
       int maxTimestamp = Math.max(source.get(i), destination.get(i));
       destination.set(i, maxTimestamp);
     }
   }
 
+  public static void mergeVectorClocks(ArrayList<VectorClock> source, ArrayList<VectorClock> destination) {
+    for (VectorClock vectorClock : source) {
+      destination.stream().filter(clock -> clock.port == vectorClock.port).findFirst().ifPresent(clock -> {
+        clock.setTimestampVector(vectorClock.timestampVector);
+      });
+    }
+  }
+
   public String toString() {
     return String.format("<%s, %s>", this.port, this.timestampVector.toString());
   }
+
 }

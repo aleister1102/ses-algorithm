@@ -4,10 +4,10 @@ import java.net.*;
 import java.util.*;
 
 import org.example.constants.Configuration;
+import org.example.models.Message;
 import org.example.models.VectorClock;
 import org.example.utils.LogUtil;
 import org.example.utils.SocketUtil;
-
 
 import lombok.Data;
 import org.example.utils.ThreadUtil;
@@ -18,8 +18,11 @@ public class Process {
   private ServerSocket serverSocket;
   private Map<Integer, Client> clients;
 
-  public static final ArrayList<Integer> timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
+  // Shared variables
+  public static volatile ArrayList<Integer> timestampVector = new ArrayList<>(
+      Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
   public static final ArrayList<VectorClock> vectorClocks = new ArrayList<>();
+  public static final List<Message> buffer = new LinkedList<>();
 
   public Process(int port) {
     this.port = port;
@@ -50,6 +53,7 @@ public class Process {
       // Wait for all processes to be connected
       LogUtil.log("Press any key to send messages");
       scanner.nextLine();
+      scanner.close();
 
       // Create a client for each existing port (except the current port)
       for (int existingPort : Configuration.PORTS) {
@@ -64,16 +68,17 @@ public class Process {
       }
 
       // All processes are connected, send messages
-//      for (Client client : process.getClients()) {
-//        int numberOfMessagesPerMinute = Configuration.randomNumberOfMessagesPerMinute();
-//        int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
-//        LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
-//        LogUtil.log("Sleep time between messages: %s ms", sleepTime);
-//
-//        int[] sleepTimes = new int[numberOfMessagesPerMinute];
-//        Arrays.fill(sleepTimes, sleepTime);
-//        ThreadUtil.start(() -> client.send(numberOfMessagesPerMinute, sleepTimes));
-//      }
+      // for (Client client : process.getClients()) {
+      // int numberOfMessagesPerMinute =
+      // Configuration.randomNumberOfMessagesPerMinute();
+      // int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
+      // LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
+      // LogUtil.log("Sleep time between messages: %s ms", sleepTime);
+      //
+      // int[] sleepTimes = new int[numberOfMessagesPerMinute];
+      // Arrays.fill(sleepTimes, sleepTime);
+      // ThreadUtil.start(() -> client.send(numberOfMessagesPerMinute, sleepTimes));
+      // }
 
       // Simulate the example
       Client clientWithPort1 = process.getClients().get(1);
@@ -82,11 +87,13 @@ public class Process {
 
       if (port == 2) {
         ThreadUtil.start(() -> clientWithPort1.send(2, 7000, 2000));
+        ThreadUtil.sleep(1000);
         ThreadUtil.start(() -> clientWithPort3.send(1, 2000));
       } else if (port == 3) {
         ThreadUtil.sleep(4000);
-        ThreadUtil.start(() -> clientWithPort1.send(1, 6000));
-        ThreadUtil.start(() -> clientWithPort2.send(1, 2000));
+        ThreadUtil.start(() -> clientWithPort1.send(1, 7000));
+        ThreadUtil.sleep(1000);
+        ThreadUtil.start(() -> clientWithPort2.send(1, 1000));
       }
     }
   }
