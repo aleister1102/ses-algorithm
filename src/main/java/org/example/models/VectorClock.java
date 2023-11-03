@@ -18,11 +18,11 @@ public class VectorClock {
   private int port;
   private List<Integer> timestampVector;
 
-  public static void incrementAt(List<Integer> timestampVector, int index) {
+  public static void increment(int index, List<Integer> timestampVector) {
     timestampVector.set(index, timestampVector.get(index) + 1);
   }
 
-  private static VectorClock findByReceiverPort(List<VectorClock> vectorClocks, int receiverPort) {
+  public static VectorClock findByReceiverPort(List<VectorClock> vectorClocks, int receiverPort) {
     return vectorClocks
             .stream()
             .filter(vectorClock -> vectorClock.getPort() == receiverPort)
@@ -30,9 +30,13 @@ public class VectorClock {
             .orElse(null);
   }
 
-  public static void updateTimestampVectorInList(List<VectorClock> vectorClocks, int receiverPort,
-                                                 List<Integer> timestampVector) {
+  public static void updateTimestampVectorInList(
+          List<Integer> timestampVector,
+          int receiverPort,
+          List<VectorClock> vectorClocks) {
+
     LogUtil.log("Thread %s is updating timestamp vector of port %s to %s", Thread.currentThread().getName(), receiverPort, timestampVector);
+
     VectorClock vectorClock = findByReceiverPort(vectorClocks, receiverPort);
     Optional.ofNullable(vectorClock).ifPresentOrElse(
             vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
@@ -40,6 +44,7 @@ public class VectorClock {
   }
 
   public static boolean isLessThanOrEqual(List<Integer> timestampVector, List<Integer> otherTimestampVector) {
+    LogUtil.log("Check whether the timestamp vector %s is less than or equal the timestamp vector %s", timestampVector, otherTimestampVector);
     for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
       if (timestampVector.get(i) > otherTimestampVector.get(i))
         return false;
@@ -65,5 +70,4 @@ public class VectorClock {
   public String toString() {
     return String.format("<%s, %s>", this.port, this.timestampVector.toString());
   }
-
 }

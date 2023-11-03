@@ -1,5 +1,7 @@
 package org.example.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,7 +30,8 @@ public class LogUtil {
   }
 
   public static void logWithCurrentTimestamp(String format, Object... args) {
-    format = new Timestamp(System.currentTimeMillis()).toString() + " - " + format;
+    Timestamp now = new Timestamp(System.currentTimeMillis());
+    format = StringUtils.rightPad(now.toString(), 23, '0') + " - " + format;
     log(String.format(format, args));
   }
 }

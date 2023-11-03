@@ -20,6 +20,7 @@ public class Client {
   private Socket socket;
   private BufferedReader bufferedReader; // for reading message from server
   private BufferedWriter bufferedWriter; // for sending message to server
+  private File logFile;
 
   public Client(int senderPort, int receiverPort, Socket socket) {
     try {
@@ -28,15 +29,14 @@ public class Client {
       this.socket = socket;
       this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+      this.logFile = FileUtil.setupLogFile(senderPort);
     } catch (IOException exception) {
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
     }
   }
 
   public void send(int numberOfMessages, int... delays) {
-    File logFile = FileUtil.setupLogFile(senderPort);
-    File centralLogFile = FileUtil.setupCentralLogFile();
-    LogUtil.logWithCurrentTimestamp("Thread %s of port %s is sending %s message(s) to port %s",
+    LogUtil.logWithCurrentTimestamp("%s of port %s is sending %s message(s) to port %s",
             Thread.currentThread().getName(),
             senderPort,
             numberOfMessages,
@@ -48,7 +48,7 @@ public class Client {
           synchronized (Process.lock) {
             // Increment and update the timestamp vector
             int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
-            VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+            VectorClock.increment(indexInTimestampVector, Process.timestampVector);
 
             // Get the current timestamp vector and the current vector clocks - why need this?
             ArrayList<Integer> currentTimestampVector = new ArrayList<>(Process.timestampVector);
@@ -61,7 +61,7 @@ public class Client {
             String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), currentTimestampVector);
             LogUtil.log(logMessage);
             LogUtil.writeLogToFile(logMessage, logFile);
-            LogUtil.writeLogToFile(logMessage, centralLogFile);
+            LogUtil.writeLogToFile(logMessage, Process.centralLogFile);
 
             // Send the message to the buffer
             LogUtil.logWithCurrentTimestamp("Sending message %s to port %s", message.toLog(), receiverPort);
@@ -69,7 +69,7 @@ public class Client {
             bufferedWriter.newLine();
 
             // Save the vector clock of the previous message
-            VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, currentTimestampVector);
+            VectorClock.updateTimestampVectorInList(currentTimestampVector, receiverPort, Process.vectorClocks);
           }
 
           Thread.sleep(delays[messageIndex - 1]);
@@ -83,12 +83,10 @@ public class Client {
 
   private Message buildMessage(int messageIndex, ArrayList<Integer> timestampVector, ArrayList<VectorClock> vectorClocks) {
     String content = String.format("[message %s]", messageIndex);
-    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
     return Message.builder()
             .senderPort(senderPort)
             .receiverPort(receiverPort)
             .content(content)
-            .timestamp(timestamp)
             .timestampVector(timestampVector)
             .vectorClocks(vectorClocks)
             .build();

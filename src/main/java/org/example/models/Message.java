@@ -20,9 +20,12 @@ public class Message {
   private int senderPort;
   private int receiverPort;
   private String content;
-  private Timestamp timestamp;
   private ArrayList<Integer> timestampVector;
   private ArrayList<VectorClock> vectorClocks;
+  private String status;
+
+  public static final String DELIVERED = "delivered";
+  public static final String BUFFERED = "buffered";
 
   public String toString() {
     try {
@@ -35,12 +38,22 @@ public class Message {
   }
 
   public String toLog() {
-    return String.format("[P%s -> P%s]: %s (timestamp: %s, timestampVector: %s, vector clocks: %s)",
+    return String.format("[P%s -> P%s]: %s (timestamp vector: %s, vector clocks: %s, status: %s)",
             senderPort,
             receiverPort,
             content,
-            StringUtils.rightPad(timestamp.toString(), 23, '0'),
             timestampVector.toString(),
-            vectorClocks.toString());
+            vectorClocks.toString(),
+            status);
+  }
+
+  public static Message parse(String messageString) {
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readValue(messageString, Message.class);
+    } catch (JsonProcessingException e) {
+      LogUtil.log("An error occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageString, e.getMessage());
+      return null;
+    }
   }
 }

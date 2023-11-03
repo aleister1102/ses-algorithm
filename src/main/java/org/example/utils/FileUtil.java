@@ -5,8 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class FileUtil {
-  private static boolean alreadyCleared = false;
-
   public static final String CENTRAL_LOG_FILE = "logs/central-logs.txt";
 
 
@@ -29,12 +27,9 @@ public class FileUtil {
   public static void clearFile(File file) {
     try {
       if (!file.exists()) return;
-      if (alreadyCleared) return;
-
       FileWriter writer = new FileWriter(file);
       writer.write("");
       writer.close();
-      alreadyCleared = true;
     } catch (IOException e) {
       System.out.println("An error have been occurred while clearing file: " + e.getMessage());
     }
@@ -42,14 +37,10 @@ public class FileUtil {
 
   public static File setupLogFile(int port) {
     String logFileName = String.format("logs/process-%s.txt", port);
-    File logFile = FileUtil.createFile(logFileName);
-    FileUtil.clearFile(logFile);
-    return logFile;
+    return FileUtil.createFile(logFileName);
   }
 
   public static File setupCentralLogFile() {
-    File logFile = FileUtil.createFile(CENTRAL_LOG_FILE);
-    FileUtil.clearFile(logFile);
-    return logFile;
+    return FileUtil.createFile(CENTRAL_LOG_FILE);
   }
 }

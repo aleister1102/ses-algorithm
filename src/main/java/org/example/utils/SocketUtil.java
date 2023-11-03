@@ -1,5 +1,7 @@
 package org.example.utils;
 
+import org.example.constants.Configuration;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -10,19 +12,19 @@ public class SocketUtil {
   public static ServerSocket createServerSocket(int port) {
     try {
       ServerSocket serverSocket = new ServerSocket(port);
-      LogUtil.log("Server socket is created on port %s", port);
+      LogUtil.logWithCurrentTimestamp("Server socket is created on port %s", port);
       return serverSocket;
     } catch (IOException e) {
-      LogUtil.log("Port %s is already in use", port);
+      LogUtil.logWithCurrentTimestamp("Port %s is already in use", port);
       return null;
     }
   }
 
   public static Socket createClientSocket(int port) {
     try {
-      return new Socket("localhost", port);
+      return new Socket(Configuration.LOCALHOST, port);
     } catch (IOException e) {
-      LogUtil.log("An error occurred when connecting to port %s: %s", port, e.getMessage());
+      LogUtil.logWithCurrentTimestamp("An error occurred when connecting to port %s: %s", port, e.getMessage());
       return null;
     }
   }
@@ -39,7 +41,7 @@ public class SocketUtil {
         socket.close(); // also close the input and output stream
       }
     } catch (IOException exception) {
-      LogUtil.log("An error occurred while closing the socket: %s", exception.getMessage());
+      LogUtil.logWithCurrentTimestamp("An error occurred while closing the socket: %s", exception.getMessage());
     }
   }
 }
