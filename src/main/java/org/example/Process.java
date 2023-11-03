@@ -19,10 +19,11 @@ public class Process {
   private Map<Integer, Client> clients;
 
   // Shared variables
-  public static volatile ArrayList<Integer> timestampVector = new ArrayList<>(
-      Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
+  public static final ArrayList<Integer> timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
   public static final ArrayList<VectorClock> vectorClocks = new ArrayList<>();
   public static final List<Message> buffer = new LinkedList<>();
+
+  public static final Object lock = new Object();
 
   public Process(int port) {
     this.port = port;

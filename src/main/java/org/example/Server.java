@@ -13,9 +13,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 public class Server {
   private final ServerSocket serverSocket;
@@ -49,8 +47,6 @@ public class Server {
     private Socket clientSocket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private final List<Message> buffer = new LinkedList<>();
-    private static final List<ClientHandler> clientHandlers = new LinkedList<>();
 
     public ClientHandler(int port, Socket clientSocket) {
       try {
@@ -58,11 +54,8 @@ public class Server {
         this.clientSocket = clientSocket;
         this.bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-
-        clientHandlers.add(this);
       } catch (IOException e) {
         LogUtil.log("An error occurred while creating a client handler: %s", e.getMessage());
-        clientHandlers.remove(this);
       }
     }
 
@@ -92,25 +85,30 @@ public class Server {
             break;
         } catch (IOException e) {
           SocketUtil.closeEverything(clientSocket, bufferedReader, bufferedWriter);
-          clientHandlers.remove(this);
         }
       }
     }
 
     private boolean canDeliver(Message message) {
       ArrayList<VectorClock> vectorClocks = message.getVectorClocks();
-      Optional<ArrayList<Integer>> optionalTimestampVector = vectorClocks.stream()
+      List<Integer> timestampVectorInVectorClocks = vectorClocks.stream()
               .filter(clock -> clock.getPort() == port)
               .map(VectorClock::getTimestampVector)
-              .findFirst();
+              .findAny()
+              .orElse(null);
 
-      if (optionalTimestampVector.isPresent()) {
-        // Check whether the timestamp vector in the vector clock is less than or equal the timestamp vector of the current process
-        if (VectorClock.isLessThanOrEqual(message.getTimestampVector(), Process.timestampVector)) {
+      if (timestampVectorInVectorClocks != null) {
+        LogUtil.log("Comparing timestamp vector in vector clocks: %s with timestamp vector of current process: %s",
+                timestampVectorInVectorClocks,
+                Process.timestampVector);
+        // Check whether the timestamp vector in the vector clock
+        // is less than or equal the timestamp vector of the current process
+        if (VectorClock.isLessThanOrEqual(timestampVectorInVectorClocks, Process.timestampVector)) {
           return true; // then deliver it
         } else {
-          buffer.add(message); // else buffer it
-          LogUtil.log("Message %s is buffered\n", message.toLog());
+          Process.buffer.add(message); // else buffer it
+          LogUtil.logWithCurrentTimestamp("Message %s is buffered\n", message.toLog());
+          LogUtil.logWithCurrentTimestamp("Current buffer:\n%s", Process.buffer.stream().map(Message::toLog).reduce("", (acc, cur) -> acc + cur + "\n"));
           return false;
         }
       } else {
@@ -120,33 +118,36 @@ public class Server {
 
     private void deliver(Message message, File logFile, File centralLogFile) {
       int receiverPort = message.getReceiverPort();
-      ArrayList<Integer> timestampVector = message.getTimestampVector();
+      List<Integer> timestampVector = message.getTimestampVector();
+      List<VectorClock> vectorClocks = message.getVectorClocks();
 
-      synchronized (Process.timestampVector) {
-        // Increment and update the timestamp vector
-        int indexInTimestampVector = Configuration.getIndexInTimestampVector(receiverPort);
-        VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
-        VectorClock.merge(timestampVector, Process.timestampVector);
+      // Increment and update the timestamp vector
+      int indexInTimestampVector = Configuration.getIndexInTimestampVector(receiverPort);
+      VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
+      VectorClock.mergeTimestampVector(timestampVector, Process.timestampVector);
+      VectorClock.mergeVectorClocks(vectorClocks, Process.vectorClocks);
 
-        // Log and write message content
-        String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), Process.timestampVector);
-        LogUtil.log(logMessage);
-        LogUtil.writeLogToFile(logMessage, logFile);
-        LogUtil.writeLogToFile(logMessage, centralLogFile);
+      // Log and write message content
+      String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), Process.timestampVector);
+      LogUtil.log(logMessage);
+      LogUtil.writeLogToFile(logMessage, logFile);
+      LogUtil.writeLogToFile(logMessage, centralLogFile);
 
-        // Deliver message(s) in the buffer that can be delivered
-//        deliverMessageFromBuffer(logFile, centralLogFile);
-      }
+      // Deliver message(s) in the buffer that can be delivered
+      if (!Process.buffer.isEmpty())
+        deliverMessageFromBuffer(logFile, centralLogFile);
     }
 
-//    private void deliverMessageFromBuffer(File logFile, File centralLogFile) {
-//      for (Message message : buffer) {
-//        if (VectorClock.isLessThanOrEqual(message.getTimestampVector(), Process.timestampVector)) {
-//          buffer.remove(message);
-//          deliver(message, logFile, centralLogFile);
-//        }
-//      }
-//    }
+    private void deliverMessageFromBuffer(File logFile, File centralLogFile) {
+      LogUtil.logWithCurrentTimestamp("Current buffer:\n%s", Process.buffer.stream().map(Message::toLog).reduce("", (acc, cur) -> acc + cur + "\n"));
+      for (Message message : Process.buffer) {
+        if (canDeliver(message)) {
+          LogUtil.logWithCurrentTimestamp("Delivering message %s from buffer", message.toLog());
+          Process.buffer.remove(message);
+          deliver(message, logFile, centralLogFile);
+        }
+      }
+    }
   }
 
   private void close(Closeable socket) {

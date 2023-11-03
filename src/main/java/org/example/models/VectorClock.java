@@ -5,11 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.constants.Configuration;
+import org.example.utils.LogUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Vector;
 
 @Data
 @Builder
@@ -25,18 +24,19 @@ public class VectorClock {
 
   private static VectorClock findByReceiverPort(List<VectorClock> vectorClocks, int receiverPort) {
     return vectorClocks
-        .stream()
-        .filter(vectorClock -> vectorClock.getPort() == receiverPort)
-        .findFirst()
-        .orElse(null);
+            .stream()
+            .filter(vectorClock -> vectorClock.getPort() == receiverPort)
+            .findFirst()
+            .orElse(null);
   }
 
   public static void updateTimestampVectorInList(List<VectorClock> vectorClocks, int receiverPort,
-      List<Integer> timestampVector) {
+                                                 List<Integer> timestampVector) {
+    LogUtil.log("Thread %s is updating timestamp vector of port %s to %s", Thread.currentThread().getName(), receiverPort, timestampVector);
     VectorClock vectorClock = findByReceiverPort(vectorClocks, receiverPort);
     Optional.ofNullable(vectorClock).ifPresentOrElse(
-        vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
-        () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build()));
+            vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
+            () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build()));
   }
 
   public static boolean isLessThanOrEqual(List<Integer> timestampVector, List<Integer> otherTimestampVector) {
@@ -54,7 +54,7 @@ public class VectorClock {
     }
   }
 
-  public static void mergeVectorClocks(ArrayList<VectorClock> source, ArrayList<VectorClock> destination) {
+  public static void mergeVectorClocks(List<VectorClock> source, List<VectorClock> destination) {
     for (VectorClock vectorClock : source) {
       destination.stream().filter(clock -> clock.port == vectorClock.port).findFirst().ifPresent(clock -> {
         clock.setTimestampVector(vectorClock.timestampVector);

@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: create a central log file">
-      <change afterPath="$PROJECT_DIR$/logs/central-logs.txt" afterDir="false" />
+    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="temp:">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/process-1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-1.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/process-2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-2.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/process-3.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/process-3.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Client.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Process.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Process.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Server.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/models/VectorClock.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/models/VectorClock.java" afterDir="false" />
@@ -188,6 +185,7 @@
     <MESSAGE value="feat: simulate the example" />
     <MESSAGE value="feat: merge timestamp vector" />
     <MESSAGE value="feat: create a central log file" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: create a central log file" />
+    <MESSAGE value="feat: implement the buffer" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: implement the buffer" />
   </component>
 </project>

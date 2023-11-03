@@ -36,14 +36,16 @@ public class Client {
   public void send(int numberOfMessages, int... delays) {
     File logFile = FileUtil.setupLogFile(senderPort);
     File centralLogFile = FileUtil.setupCentralLogFile();
+    LogUtil.logWithCurrentTimestamp("Thread %s of port %s is sending %s message(s) to port %s",
+            Thread.currentThread().getName(),
+            senderPort,
+            numberOfMessages,
+            receiverPort);
 
     try {
       if (socket.isConnected()) {
-        LogUtil.log("Sending %s message(s) to port %s", numberOfMessages, receiverPort);
-
         for (int messageIndex = 1; messageIndex <= numberOfMessages; messageIndex++) {
-          Message message;
-          synchronized (Process.timestampVector) {
+          synchronized (Process.lock) {
             // Increment and update the timestamp vector
             int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
             VectorClock.incrementAt(Process.timestampVector, indexInTimestampVector);
@@ -53,7 +55,7 @@ public class Client {
             ArrayList<VectorClock> currentVectorClocks = new ArrayList<>(Process.vectorClocks);
 
             // Build the message
-            message = buildMessage(messageIndex, currentTimestampVector, currentVectorClocks);
+            Message message = buildMessage(messageIndex, currentTimestampVector, currentVectorClocks);
 
             // Log and write the sending message
             String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), currentTimestampVector);
@@ -61,15 +63,16 @@ public class Client {
             LogUtil.writeLogToFile(logMessage, logFile);
             LogUtil.writeLogToFile(logMessage, centralLogFile);
 
+            // Send the message to the buffer
+            LogUtil.logWithCurrentTimestamp("Sending message %s to port %s", message.toLog(), receiverPort);
+            bufferedWriter.write(message.toString());
+            bufferedWriter.newLine();
+
             // Save the vector clock of the previous message
             VectorClock.updateTimestampVectorInList(Process.vectorClocks, receiverPort, currentTimestampVector);
           }
 
           Thread.sleep(delays[messageIndex - 1]);
-
-          // Send the message
-          bufferedWriter.write(message.toString());
-          bufferedWriter.newLine();
           bufferedWriter.flush();
         }
       }
