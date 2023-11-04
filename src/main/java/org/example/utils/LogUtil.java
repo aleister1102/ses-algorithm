@@ -21,7 +21,7 @@ public class LogUtil {
     return StringUtils.rightPad(now.toString(), 23, '0') + " - " + message;
   }
 
-  private static String formatWithSystemTimestamp(String format, Object... args) {
+  public static String formatWithSystemTimestamp(String format, Object... args) {
     String formattedMessage = String.format(format, args);
     return toLogWithSystemTimestamp(formattedMessage);
   }
@@ -35,6 +35,13 @@ public class LogUtil {
     log(message);
     writeLogToFile(message, logFile);
     writeLogToFile(message, Process.centralLogFile);
+  }
+
+  public static void logAndWriteByPort(int port, String format, Object... args) {
+    String message = String.format(format, args);
+    String log = toLogWithSystemTimestamp(message);
+    File logFile = FileUtil.setupLogFile(port);
+    logAndWrite(log, logFile);
   }
 
   public static void logAndWriteWithTimestampVectorAndSystemTimestamp(Message message, List<Integer> currentTimestampVector, File logFile, String postfix) {

@@ -32,9 +32,7 @@ public class Process {
   public Process(int port) {
     this.port = port;
 
-    Optional.ofNullable(SocketUtil.createServerSocket(port)).ifPresent(createdServerSocket -> {
-      this.serverSocket = createdServerSocket;
-    });
+    Optional.ofNullable(SocketUtil.createServerSocket(port)).ifPresent(createdServerSocket -> this.serverSocket = createdServerSocket);
 
     clients = new HashMap<>();
     FileUtil.clearFile(FileUtil.setupLogFile(port));
@@ -69,7 +67,7 @@ public class Process {
       createClients(process);
 
       // All processes are connected, send messages
-      // runDemo(process);
+//      runDemo(process);
 
       // Simulate the example
       runScenarioOne(process);
@@ -95,12 +93,13 @@ public class Process {
 
       int numberOfMessagesPerMinute = Configuration.randomNumberOfMessagesPerMinute();
       int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
+      LogUtil.log("Sending message to port %s", client.getReceiverPort());
       LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
       LogUtil.log("Sleep time between messages: %s ms", sleepTime);
 
-      int[] sleepTimes = new int[numberOfMessagesPerMinute];
+      int[] sleepTimes = new int[Configuration.NUMBER_OF_MESSAGES];
       Arrays.fill(sleepTimes, sleepTime);
-      ThreadUtil.start(() -> client.send(numberOfMessagesPerMinute, sleepTimes));
+      ThreadUtil.start(() -> client.send(Configuration.NUMBER_OF_MESSAGES, sleepTimes));
     }
   }
 

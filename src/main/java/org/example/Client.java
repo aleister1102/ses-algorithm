@@ -64,7 +64,7 @@ public class Client {
             bufferedWriter.newLine();
 
             // Save the timestamp vector of the previous message to vector clocks
-            VectorClock.updateTimestampVectorInList(currentTimestampVector, receiverPort, Process.vectorClocks);
+            VectorClock.updateTimestampVectorInList(currentTimestampVector, Process.vectorClocks, senderPort, receiverPort);
           }
 
           Thread.sleep(delays[messageIndex - 1]);

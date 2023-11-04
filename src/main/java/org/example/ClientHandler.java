@@ -51,7 +51,7 @@ public class ClientHandler implements Runnable {
 
   private boolean check(Message message) {
     ArrayList<VectorClock> vectorClocks = message.getVectorClocks();
-    VectorClock vectorClock = VectorClock.findByReceiverPort(vectorClocks, port);
+    VectorClock vectorClock = VectorClock.findByPort(vectorClocks, port);
 
     if (vectorClock != null) {
       // Check whether the timestamp vector in the vector clock
@@ -71,7 +71,7 @@ public class ClientHandler implements Runnable {
   }
 
   private boolean isVectorClockSatisfied(VectorClock vectorClock) {
-    return VectorClock.isLessThanOrEqual(vectorClock.getTimestampVector(), Process.timestampVector);
+    return vectorClock.isTimestampVectorLessThanOrEqual(Process.timestampVector);
   }
 
   private void bufferMessage(Message message) {
@@ -105,8 +105,8 @@ public class ClientHandler implements Runnable {
   }
 
   private void mergeTimestampVectorAndVectorClocks(List<Integer> timestampVector, List<VectorClock> vectorClocks) {
-    VectorClock.mergeTimestampVector(timestampVector, Process.timestampVector);
-    VectorClock.mergeVectorClocks(vectorClocks, Process.vectorClocks);
+    VectorClock.mergeTimestampVector(timestampVector, Process.timestampVector, port);
+    VectorClock.mergeVectorClocks(vectorClocks, Process.vectorClocks, port);
   }
 
   private void deliverMessageFromBuffer() {

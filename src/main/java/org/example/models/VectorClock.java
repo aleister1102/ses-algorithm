@@ -21,32 +21,34 @@ public class VectorClock {
 
   public static void incrementByPort(int port) {
     int indexInTimestampVector = Configuration.getIndexInTimestampVector(port);
-    VectorClock.incrementByIndex(indexInTimestampVector);
+    if (indexInTimestampVector != -1)
+      VectorClock.incrementByIndex(indexInTimestampVector);
   }
 
   private static void incrementByIndex(int index) {
     Process.timestampVector.set(index, Process.timestampVector.get(index) + 1);
   }
 
-  public static VectorClock findByReceiverPort(List<VectorClock> vectorClocks, int receiverPort) {
+  public static VectorClock findByPort(List<VectorClock> vectorClocks, int port) {
     return vectorClocks
             .stream()
-            .filter(vectorClock -> vectorClock.getPort() == receiverPort)
+            .filter(vectorClock -> vectorClock.getPort() == port)
             .findFirst()
             .orElse(null);
   }
 
-  public static void updateTimestampVectorInList(List<Integer> timestampVector, int receiverPort, List<VectorClock> vectorClocks) {
-    VectorClock vectorClock = findByReceiverPort(vectorClocks, receiverPort);
+  public static void updateTimestampVectorInList(List<Integer> timestampVector, List<VectorClock> vectorClocks, int senderPort, int receiverPort) {
+    VectorClock vectorClock = findByPort(vectorClocks, receiverPort);
     Optional.ofNullable(vectorClock).ifPresentOrElse(
             vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
             () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build()));
 
-    LogUtil.logWithSystemTimestamp("Updates timestamp vector of port %s to %s", receiverPort, timestampVector);
+    LogUtil.logAndWriteByPort(senderPort, "Updates timestamp vector of port %s to %s. Current vector clocks: %s",
+            receiverPort, timestampVector, vectorClocks);
   }
 
-  public static boolean isLessThanOrEqual(List<Integer> timestampVector, List<Integer> otherTimestampVector) {
-    LogUtil.logWithSystemTimestamp("Check whether the timestamp vector %s is less than or equal the timestamp vector %s",
+  public boolean isTimestampVectorLessThanOrEqual(List<Integer> otherTimestampVector) {
+    LogUtil.logAndWriteByPort(port, "Check whether the timestamp vector %s is less than or equal the timestamp vector %s",
             timestampVector, otherTimestampVector);
 
     for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
@@ -56,7 +58,7 @@ public class VectorClock {
     return true;
   }
 
-  public static void mergeTimestampVector(List<Integer> source, List<Integer> destination) {
+  public static void mergeTimestampVector(List<Integer> source, List<Integer> destination, int port) {
     List<Integer> destinationCopy = List.copyOf(destination);
 
     for (int i = 0; i < source.size(); i++) {
@@ -64,17 +66,17 @@ public class VectorClock {
       destination.set(i, maxTimestamp);
     }
 
-    LogUtil.logWithSystemTimestamp("Merged timestamp vector %s and %s. Current timestamp vector of the process: ",
+    LogUtil.logAndWriteByPort(port, "Merged timestamp vector %s and %s. Current timestamp vector of the process: %s",
             source, destinationCopy, destination);
   }
 
-  public static void mergeVectorClocks(List<VectorClock> source, List<VectorClock> destination) {
+  public static void mergeVectorClocks(List<VectorClock> source, List<VectorClock> destination, int port) {
     for (VectorClock vectorClock : source) {
       destination.stream().filter(clock -> clock.port == vectorClock.port).findFirst().ifPresent(clock -> {
         clock.setTimestampVector(vectorClock.timestampVector);
 
-        LogUtil.logWithSystemTimestamp("Merged timestamp vector %s into %s. Current vector clocks of the process: ",
-                vectorClock.timestampVector, clock.timestampVector, destination);
+        LogUtil.logAndWriteByPort(port, "Merged timestamp vector %s into %s. Current vector clocks of the process: %s",
+                vectorClock.timestampVector, clock, destination);
       });
     }
   }
