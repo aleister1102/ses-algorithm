@@ -4,14 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="feat: deliver buffered message">
+    <list default="true" id="d2b31476-db79-44d9-8f44-19623de0ff0c" name="Changes" comment="fix: concurrent modification by using concurrent collection">
+      <change afterPath="$PROJECT_DIR$/java_pid13420.hprof" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/config.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Client.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ClientHandler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Process.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Process.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/constants/Configuration.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/models/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/models/Message.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/models/VectorClock.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/models/VectorClock.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/FileUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/FileUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/LogUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/utils/ThreadUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/utils/ThreadUtil.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,7 +54,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
@@ -189,6 +194,8 @@
     <MESSAGE value="feat: create a central log file" />
     <MESSAGE value="feat: implement the buffer" />
     <MESSAGE value="feat: deliver buffered message" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: deliver buffered message" />
+    <MESSAGE value="fix: merge incoming vector clocks instead of replace" />
+    <MESSAGE value="fix: concurrent modification by using concurrent collection" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: concurrent modification by using concurrent collection" />
   </component>
 </project>

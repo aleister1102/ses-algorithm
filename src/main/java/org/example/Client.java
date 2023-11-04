@@ -56,7 +56,7 @@ public class Client {
             LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(
                     message,
                     currentTimestampVector,
-                    logFile, String.format("is sent to port %s", receiverPort)
+                    logFile, String.format("is sending to port %s", receiverPort)
             );
 
             // Write the message to the buffer
@@ -70,6 +70,8 @@ public class Client {
           Thread.sleep(delays[messageIndex - 1]);
           bufferedWriter.flush();
         }
+
+        LogUtil.logWithSystemTimestamp("Port %s is done sending messages to port %s", senderPort, receiverPort);
       }
     } catch (IOException | InterruptedException exception) {
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);

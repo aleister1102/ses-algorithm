@@ -19,8 +19,8 @@ public class FileUtil {
     }
   }
 
-  public static File createFile(String fileName) {
-    File file = new File(fileName);
+  public static File createFile(String filePath) {
+    File file = new File(filePath);
     createFile(file);
     return file;
   }
@@ -39,9 +39,5 @@ public class FileUtil {
   public static File setupLogFile(int port) {
     String logFileName = String.format("logs/process-%s.txt", port);
     return FileUtil.createFile(logFileName);
-  }
-
-  public static File setupCentralLogFile() {
-    return FileUtil.createFile(Configuration.CENTRAL_LOG_FILE);
   }
 }

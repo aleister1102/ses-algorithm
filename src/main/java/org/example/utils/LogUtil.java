@@ -1,7 +1,6 @@
 package org.example.utils;
 
 import org.apache.commons.lang3.StringUtils;
-import org.example.Process;
 import org.example.models.Message;
 
 import java.io.File;
@@ -34,7 +33,6 @@ public class LogUtil {
   public static void logAndWrite(String message, File logFile) {
     log(message);
     writeLogToFile(message, logFile);
-    writeLogToFile(message, Process.centralLogFile);
   }
 
   public static void logAndWriteByPort(int port, String format, Object... args) {

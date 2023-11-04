@@ -22,11 +22,11 @@ public class Message implements  Cloneable {
   private ArrayList<VectorClock> vectorClocks;
 
   @Builder.Default
-  private String status = SENT;
+  private String status = SENDING;
 
   public static final String DELIVERY = "delivery";
   public static final String BUFFER = "buffer";
-  public static final String SENT = "sent";
+  public static final String SENDING = "sending";
 
   public String toString() {
     try {

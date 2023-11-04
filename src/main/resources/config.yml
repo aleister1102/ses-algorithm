@@ -1,0 +1,6 @@
+mode: example # demo or example
+demo:
+  numberOfProcesses: 10
+  numberOfMessages: 150
+example:
+  numberOfProcesses: 3

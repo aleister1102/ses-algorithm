@@ -20,6 +20,9 @@ dependencies {
     // Apache commons lang
     implementation 'org.apache.commons:commons-lang3:3.13.0'
 
+    // Snake YAML
+    implementation 'org.yaml:snakeyaml:1.28'
+
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }

@@ -116,7 +116,7 @@ public class ClientHandler implements Runnable {
 
     List<VectorClock> vectorClocksCopy = VectorClock.copyVectorClocksOfProcess();
     VectorClock.mergeVectorClocks(otherVectorClocks, Process.vectorClocks);
-    LogUtil.logAndWriteByPort(port, "Merged vector clocks %s into %s. Current vector clocks: %s",
+    LogUtil.logAndWriteByPort(port, "Merging vector clocks %s into %s. Current vector clocks: %s",
             otherVectorClocks, vectorClocksCopy, Process.vectorClocks);
   }
 
@@ -125,13 +125,15 @@ public class ClientHandler implements Runnable {
 
     if (messageToBeDelivered != null) {
       // Remove the message from the buffer
-      Process.buffer.remove(messageToBeDelivered);
-      LogUtil.logAndWriteByPort(port, "Message %s is removed from buffer", messageToBeDelivered.toLog());
-      LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s", port, Process.convertBufferToString());
+      boolean removed = Process.buffer.remove(messageToBeDelivered);
+      if (removed) {
+        LogUtil.logAndWriteByPort(port, "Message %s is removed from buffer", messageToBeDelivered.toLog());
+        LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s", port, Process.convertBufferToString());
 
-      // Deliver the message
-      messageToBeDelivered.setStatus(Message.DELIVERY);
-      deliver(messageToBeDelivered, true);
+        // Deliver the message
+        messageToBeDelivered.setStatus(Message.DELIVERY);
+        deliver(messageToBeDelivered, true);
+      }
     }
   }
 
