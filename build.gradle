@@ -28,23 +28,12 @@ test {
     useJUnitPlatform()
 }
 
-tasks.register('process1', JavaExec) {
-    main = 'org.example.Process'
-    classpath = sourceSets.main.runtimeClasspath
-    args = ['1']
-    standardInput = System.in
-}
-
-tasks.register('process2', JavaExec) {
-    main = 'org.example.Process'
-    classpath = sourceSets.main.runtimeClasspath
-    args = ['2']
-    standardInput = System.in
-}
-
-tasks.register('process3', JavaExec) {
-    main = 'org.example.Process'
-    classpath = sourceSets.main.runtimeClasspath
-    args = ['3']
-    standardInput = System.in
+(1..10).each { number ->
+    def taskName = "process${number}"
+    tasks.register(taskName, JavaExec) {
+        main = 'org.example.Process'
+        classpath = sourceSets.main.runtimeClasspath
+        args = [number.toString()]
+        standardInput = System.in
+    }
 }

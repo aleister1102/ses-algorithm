@@ -2,7 +2,7 @@ package org.example.constants;
 
 public class Configuration {
   public static final String LOCALHOST = "localhost";
-  public static final int[] PORTS = new int[3];
+  public static final int[] PORTS = new int[5];
   public static final int NUMBER_OF_PROCESSES = PORTS.length;
   public static final int NUMBER_OF_MESSAGES = 5;
   public static final String CENTRAL_LOG_FILE = "logs/central-logs.txt";

@@ -8,6 +8,8 @@ import org.example.Process;
 import org.example.constants.Configuration;
 import org.example.utils.LogUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,42 +45,55 @@ public class VectorClock {
             vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
             () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build()));
 
-    LogUtil.logAndWriteByPort(senderPort, "Updates timestamp vector of port %s to %s. Current vector clocks: %s",
+    LogUtil.logAndWriteByPort(senderPort, "Update timestamp vector of port %s in vector clocks to %s. Current vector clocks: %s",
             receiverPort, timestampVector, vectorClocks);
   }
 
   public boolean isTimestampVectorLessThanOrEqual(List<Integer> otherTimestampVector) {
-    LogUtil.logAndWriteByPort(port, "Check whether the timestamp vector %s is less than or equal the timestamp vector %s",
-            timestampVector, otherTimestampVector);
-
     for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
-      if (timestampVector.get(i) > otherTimestampVector.get(i))
+      if (timestampVector.get(i) > otherTimestampVector.get(i)) {
+        LogUtil.logAndWriteByPort(port, "Timestamp vector %s is not less than or equal the timestamp vector %s",
+                timestampVector, otherTimestampVector);
         return false;
+      }
     }
+    LogUtil.logAndWriteByPort(port, "Timestamp vector %s <= timestamp vector %s",
+            timestampVector, otherTimestampVector);
     return true;
   }
 
-  public static void mergeTimestampVector(List<Integer> source, List<Integer> destination, int port) {
-    List<Integer> destinationCopy = List.copyOf(destination);
+  public static List<Integer> mergeTimestampVector(List<Integer> source, List<Integer> destination) {
+    List<Integer> mergedTimestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
 
     for (int i = 0; i < source.size(); i++) {
       int maxTimestamp = Math.max(source.get(i), destination.get(i));
-      destination.set(i, maxTimestamp);
+      mergedTimestampVector.set(i, maxTimestamp);
     }
 
-    LogUtil.logAndWriteByPort(port, "Merged timestamp vector %s and %s. Current timestamp vector of the process: %s",
-            source, destinationCopy, destination);
+    return mergedTimestampVector;
   }
 
-  public static void mergeVectorClocks(List<VectorClock> source, List<VectorClock> destination, int port) {
-    for (VectorClock vectorClock : source) {
-      destination.stream().filter(clock -> clock.port == vectorClock.port).findFirst().ifPresent(clock -> {
-        clock.setTimestampVector(vectorClock.timestampVector);
-
-        LogUtil.logAndWriteByPort(port, "Merged timestamp vector %s into %s. Current vector clocks of the process: %s",
-                vectorClock.timestampVector, clock, destination);
-      });
+  public static void mergeVectorClocks(List<VectorClock> source, List<VectorClock> destination) {
+    for (VectorClock sourceClock : source) {
+      VectorClock destinationClock = findByPort(destination, sourceClock.port);
+      if (destinationClock != null) {
+        List<Integer> mergedTimestampVector = mergeTimestampVector(sourceClock.timestampVector, destinationClock.timestampVector);
+        destinationClock.setTimestampVector(mergedTimestampVector);
+      } else {
+        destination.add(sourceClock);
+      }
     }
+  }
+
+  public static List<VectorClock> copyVectorClocksOfProcess() {
+    List<VectorClock> vectorClocksCopy = new ArrayList<>();
+    for (VectorClock clock : Process.vectorClocks) {
+      VectorClock copy = new VectorClock();
+      copy.setPort(clock.getPort());
+      copy.setTimestampVector(new ArrayList<>(clock.getTimestampVector()));
+      vectorClocksCopy.add(copy);
+    }
+    return vectorClocksCopy;
   }
 
   public String toString() {

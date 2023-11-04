@@ -43,7 +43,7 @@ public class Process {
   }
 
   public static String convertBufferToString() {
-    return buffer.isEmpty() ? "Empty" : Process.buffer.stream().map(Message::toLog).reduce("\n", (acc, cur) -> acc + cur + "\n");
+    return buffer.isEmpty() ? "Empty" : Process.buffer.stream().map(Message::toLog).reduce("\n", (acc, cur) -> acc + "\n" + cur);
   }
 
   public static void main(String[] args) {

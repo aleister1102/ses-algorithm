@@ -14,7 +14,7 @@ import java.util.ArrayList;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Message {
+public class Message implements  Cloneable {
   private int senderPort;
   private int receiverPort;
   private String content;
@@ -55,6 +55,22 @@ public class Message {
     } catch (JsonProcessingException e) {
       LogUtil.log("Error(s) occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageString, e.getMessage());
       return null;
+    }
+  }
+
+  @Override
+  public Message clone() {
+    try {
+      Message clone = (Message) super.clone();
+      clone.setSenderPort(senderPort);
+      clone.setReceiverPort(receiverPort);
+      clone.setContent(content);
+      clone.setTimestampVector(new ArrayList<>(timestampVector));
+      clone.setVectorClocks(new ArrayList<>(vectorClocks));
+      clone.setStatus(status);
+      return clone;
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError();
     }
   }
 }

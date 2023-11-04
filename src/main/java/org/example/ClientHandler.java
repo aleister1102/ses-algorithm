@@ -40,7 +40,7 @@ public class ClientHandler implements Runnable {
         if (messageFromClient != null) {
           Optional.ofNullable(Message.parse(messageFromClient)).ifPresent((message) -> {
             if (check(message))
-              deliver(message);
+              deliver(message, false);
           });
         }
       } catch (IOException e) {
@@ -77,11 +77,11 @@ public class ClientHandler implements Runnable {
   private void bufferMessage(Message message) {
     message.setStatus(Message.BUFFER);
     Process.buffer.add(message);
-    LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(message, Process.timestampVector, logFile, " is buffered");
-    LogUtil.logWithSystemTimestamp("Current buffer: %s\n", Process.convertBufferToString());
+    LogUtil.logAndWriteByPort(port, "Message %s is buffered", message.toLog());
+    LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s\n", port, Process.convertBufferToString());
   }
 
-  private void deliver(Message message) {
+  private void deliver(Message message, boolean isFromBuffer) {
     message.setStatus(Message.DELIVERY);
     List<Integer> timestampVector = message.getTimestampVector();
     List<VectorClock> vectorClocks = message.getVectorClocks();
@@ -97,26 +97,50 @@ public class ClientHandler implements Runnable {
             message,
             Process.timestampVector,
             logFile,
-            String.format("is delivered from port %s", message.getSenderPort()));
+            isFromBuffer
+                    ? "is delivered from buffer"
+                    : String.format("is delivered from port %s", message.getSenderPort()));
 
     // Deliver message(s) in the buffer that can be delivered
     if (!Process.buffer.isEmpty())
       deliverMessageFromBuffer();
   }
 
-  private void mergeTimestampVectorAndVectorClocks(List<Integer> timestampVector, List<VectorClock> vectorClocks) {
-    VectorClock.mergeTimestampVector(timestampVector, Process.timestampVector, port);
-    VectorClock.mergeVectorClocks(vectorClocks, Process.vectorClocks, port);
+  private void mergeTimestampVectorAndVectorClocks(List<Integer> otherTimestampVector, List<VectorClock> otherVectorClocks) {
+    List<Integer> timestampVectorCopy = new ArrayList<>(Process.timestampVector);
+    List<Integer> mergedTimestampVector = VectorClock.mergeTimestampVector(otherTimestampVector, Process.timestampVector);
+    Process.timestampVector.clear();
+    Process.timestampVector.addAll(mergedTimestampVector);
+    LogUtil.logAndWriteByPort(port, "Merged timestamp vector %s and %s. Current timestamp vector of the process: %s",
+            otherTimestampVector, timestampVectorCopy, mergedTimestampVector);
+
+    List<VectorClock> vectorClocksCopy = VectorClock.copyVectorClocksOfProcess();
+    VectorClock.mergeVectorClocks(otherVectorClocks, Process.vectorClocks);
+    LogUtil.logAndWriteByPort(port, "Merged vector clocks %s into %s. Current vector clocks: %s",
+            otherVectorClocks, vectorClocksCopy, Process.vectorClocks);
   }
 
   private void deliverMessageFromBuffer() {
+    Message messageToBeDelivered = findMessageInBufferToBeDelivered();
+
+    if (messageToBeDelivered != null) {
+      // Remove the message from the buffer
+      Process.buffer.remove(messageToBeDelivered);
+      LogUtil.logAndWriteByPort(port, "Message %s is removed from buffer", messageToBeDelivered.toLog());
+      LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s", port, Process.convertBufferToString());
+
+      // Deliver the message
+      messageToBeDelivered.setStatus(Message.DELIVERY);
+      deliver(messageToBeDelivered, true);
+    }
+  }
+
+  private Message findMessageInBufferToBeDelivered() {
     for (Message message : Process.buffer) {
       if (check(message)) {
-        LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(message, Process.timestampVector, logFile, "is delivered from buffer");
-        Process.buffer.remove(message);
-        deliver(message);
+        return message;
       }
     }
-    LogUtil.logWithSystemTimestamp("Current buffer: %s", Process.convertBufferToString());
+    return null;
   }
 }
