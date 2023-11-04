@@ -3,6 +3,7 @@ package org.example;
 import java.io.File;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.example.constants.Configuration;
 import org.example.models.Message;
@@ -23,7 +24,7 @@ public class Process {
   // Shared between threads
   public static final ArrayList<Integer> timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
   public static final ArrayList<VectorClock> vectorClocks = new ArrayList<>();
-  public static final List<Message> buffer = new LinkedList<>();
+  public static final ConcurrentLinkedQueue<Message> buffer = new ConcurrentLinkedQueue<>();
   public static final File centralLogFile = FileUtil.setupCentralLogFile();
 
   // Lock for shared variables
@@ -67,10 +68,10 @@ public class Process {
       createClients(process);
 
       // All processes are connected, send messages
-//      runDemo(process);
+      runDemo(process);
 
       // Simulate the example
-      runScenarioOne(process);
+//      runScenarioOne(process);
     }
   }
 
@@ -93,7 +94,7 @@ public class Process {
 
       int numberOfMessagesPerMinute = Configuration.randomNumberOfMessagesPerMinute();
       int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
-      LogUtil.log("Sending message to port %s", client.getReceiverPort());
+      LogUtil.log("Prepare to send message to port %s", client.getReceiverPort());
       LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
       LogUtil.log("Sleep time between messages: %s ms", sleepTime);
 
