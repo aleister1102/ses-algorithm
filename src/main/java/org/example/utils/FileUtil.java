@@ -1,20 +1,21 @@
 package org.example.utils;
 
+
+import org.example.constants.Configuration;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
 public class FileUtil {
-  public static final String CENTRAL_LOG_FILE = "logs/central-logs.txt";
-
 
   public static void createFile(File file) {
     try {
       if (file.createNewFile()) {
-        System.out.println("File created: " + file.getName());
+        LogUtil.log("File created: %s", file.getName());
       }
     } catch (IOException e) {
-      System.out.println("An error occurred while creating file: " + e.getMessage());
+      LogUtil.log("Error(s) occurred while creating file: ", e.getMessage());
     }
   }
 
@@ -31,7 +32,7 @@ public class FileUtil {
       writer.write("");
       writer.close();
     } catch (IOException e) {
-      System.out.println("An error have been occurred while clearing file: " + e.getMessage());
+      LogUtil.log("Error(s) have been occurred while clearing file: ", e.getMessage());
     }
   }
 
@@ -41,6 +42,6 @@ public class FileUtil {
   }
 
   public static File setupCentralLogFile() {
-    return FileUtil.createFile(CENTRAL_LOG_FILE);
+    return FileUtil.createFile(Configuration.CENTRAL_LOG_FILE);
   }
 }

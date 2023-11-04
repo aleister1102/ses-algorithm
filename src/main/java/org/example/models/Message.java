@@ -6,10 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.example.utils.LogUtil;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 
 @Data
@@ -22,23 +20,26 @@ public class Message {
   private String content;
   private ArrayList<Integer> timestampVector;
   private ArrayList<VectorClock> vectorClocks;
-  private String status;
 
-  public static final String DELIVERED = "delivered";
-  public static final String BUFFERED = "buffered";
+  @Builder.Default
+  private String status = SENT;
+
+  public static final String DELIVERY = "delivery";
+  public static final String BUFFER = "buffer";
+  public static final String SENT = "sent";
 
   public String toString() {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       return objectMapper.writeValueAsString(this);
     } catch (JsonProcessingException e) {
-      LogUtil.log("An error occurred while converting message to string: ", e.getMessage());
+      LogUtil.log("Error(s) occurred while converting message to string: ", e.getMessage());
       return "{}";
     }
   }
 
   public String toLog() {
-    return String.format("[P%s -> P%s]: %s (timestamp vector: %s, vector clocks: %s, status: %s)",
+    return String.format("[P%s -> P%s]: %s (timestamp: %s, clocks: %s, status: %s)",
             senderPort,
             receiverPort,
             content,
@@ -52,7 +53,7 @@ public class Message {
       ObjectMapper objectMapper = new ObjectMapper();
       return objectMapper.readValue(messageString, Message.class);
     } catch (JsonProcessingException e) {
-      LogUtil.log("An error occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageString, e.getMessage());
+      LogUtil.log("Error(s) occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageString, e.getMessage());
       return null;
     }
   }

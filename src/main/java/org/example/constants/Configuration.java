@@ -7,6 +7,7 @@ public class Configuration {
   public static final Integer[] PORTS = {1, 2, 3};
   public static final int NUMBER_OF_PROCESSES = PORTS.length;
   public static final int NUMBER_OF_MESSAGES = 20;
+  public static final String CENTRAL_LOG_FILE = "logs/central-logs.txt";
 
   public static int getIndexInTimestampVector(int senderPort) {
     return Arrays.asList(PORTS).indexOf(senderPort);

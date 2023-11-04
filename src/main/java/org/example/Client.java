@@ -1,7 +1,6 @@
 package org.example;
 
 import lombok.Data;
-import org.example.constants.Configuration;
 import org.example.models.Message;
 import org.example.models.VectorClock;
 import org.example.utils.FileUtil;
@@ -10,7 +9,6 @@ import org.example.utils.SocketUtil;
 
 import java.io.*;
 import java.net.Socket;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 
 @Data
@@ -36,19 +34,16 @@ public class Client {
   }
 
   public void send(int numberOfMessages, int... delays) {
-    LogUtil.logWithCurrentTimestamp("%s of port %s is sending %s message(s) to port %s",
-            Thread.currentThread().getName(),
-            senderPort,
-            numberOfMessages,
-            receiverPort);
+    String currentThreadName = Thread.currentThread().getName();
+    LogUtil.logWithSystemTimestamp("%s of port %s is sending %s message(s) to port %s",
+            currentThreadName, senderPort, numberOfMessages, receiverPort);
 
     try {
       if (socket.isConnected()) {
         for (int messageIndex = 1; messageIndex <= numberOfMessages; messageIndex++) {
           synchronized (Process.lock) {
             // Increment and update the timestamp vector
-            int indexInTimestampVector = Configuration.getIndexInTimestampVector(senderPort);
-            VectorClock.increment(indexInTimestampVector, Process.timestampVector);
+            VectorClock.incrementByPort(senderPort);
 
             // Get the current timestamp vector and the current vector clocks - why need this?
             ArrayList<Integer> currentTimestampVector = new ArrayList<>(Process.timestampVector);
@@ -57,18 +52,18 @@ public class Client {
             // Build the message
             Message message = buildMessage(messageIndex, currentTimestampVector, currentVectorClocks);
 
-            // Log and write the sending message
-            String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), currentTimestampVector);
-            LogUtil.log(logMessage);
-            LogUtil.writeLogToFile(logMessage, logFile);
-            LogUtil.writeLogToFile(logMessage, Process.centralLogFile);
+            // Log and write the message
+            LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(
+                    message,
+                    currentTimestampVector,
+                    logFile, String.format("is sent to port %s", receiverPort)
+            );
 
-            // Send the message to the buffer
-            LogUtil.logWithCurrentTimestamp("Sending message %s to port %s", message.toLog(), receiverPort);
+            // Write the message to the buffer
             bufferedWriter.write(message.toString());
             bufferedWriter.newLine();
 
-            // Save the vector clock of the previous message
+            // Save the timestamp vector of the previous message to vector clocks
             VectorClock.updateTimestampVectorInList(currentTimestampVector, receiverPort, Process.vectorClocks);
           }
 

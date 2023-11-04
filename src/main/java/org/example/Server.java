@@ -21,7 +21,7 @@ public class Server {
         Socket clientSocket = serverSocket.accept();
         ClientHandler clientHandler = new ClientHandler(serverSocket.getLocalPort(), clientSocket);
 
-        LogUtil.logWithCurrentTimestamp("A client is connected to the server! Client port: %s", clientSocket.getPort());
+        LogUtil.logWithSystemTimestamp("A client is connected to the server! Client port: %s", clientSocket.getPort());
 
         // Create a new thread for handling the client
         ThreadUtil.start(clientHandler);

@@ -1,6 +1,5 @@
 package org.example;
 
-import org.example.constants.Configuration;
 import org.example.models.Message;
 import org.example.models.VectorClock;
 import org.example.utils.FileUtil;
@@ -28,16 +27,16 @@ public class ClientHandler implements Runnable {
       this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
       this.logFile = FileUtil.setupLogFile(port);
     } catch (IOException e) {
-      LogUtil.log("An error occurred while creating a client handler: %s", e.getMessage());
+      LogUtil.log("Error(s) occurred while creating a client handler: %s", e.getMessage());
     }
   }
 
   @Override
   public void run() {
-    String messageFromClient;
     while (clientSocket.isConnected()) {
       try {
-        messageFromClient = bufferedReader.readLine();
+        String messageFromClient = bufferedReader.readLine();
+
         if (messageFromClient != null) {
           Optional.ofNullable(Message.parse(messageFromClient)).ifPresent((message) -> {
             if (check(message))
@@ -52,7 +51,7 @@ public class ClientHandler implements Runnable {
 
   private boolean check(Message message) {
     ArrayList<VectorClock> vectorClocks = message.getVectorClocks();
-    VectorClock vectorClock = VectorClock.findByReceiverPort(vectorClocks, this.port);
+    VectorClock vectorClock = VectorClock.findByReceiverPort(vectorClocks, port);
 
     if (vectorClock != null) {
       // Check whether the timestamp vector in the vector clock
@@ -76,42 +75,48 @@ public class ClientHandler implements Runnable {
   }
 
   private void bufferMessage(Message message) {
-    message.setStatus(Message.BUFFERED);
+    message.setStatus(Message.BUFFER);
     Process.buffer.add(message);
-    LogUtil.logWithCurrentTimestamp("Message %s is buffered\n", message.toLog());
-    LogUtil.logWithCurrentTimestamp("Current buffer:\n%s", Process.buffer.stream().map(Message::toLog).reduce("", (acc, cur) -> acc + cur + "\n"));
+    LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(message, Process.timestampVector, logFile, " is buffered");
+    LogUtil.logWithSystemTimestamp("Current buffer: %s\n", Process.convertBufferToString());
   }
 
   private void deliver(Message message) {
-    message.setStatus(Message.DELIVERED);
+    message.setStatus(Message.DELIVERY);
     List<Integer> timestampVector = message.getTimestampVector();
     List<VectorClock> vectorClocks = message.getVectorClocks();
 
-    // Increment and update the timestamp vector
-    int indexInTimestampVector = Configuration.getIndexInTimestampVector(port);
-    VectorClock.increment(indexInTimestampVector, Process.timestampVector);
-    VectorClock.mergeTimestampVector(timestampVector, Process.timestampVector);
-    VectorClock.mergeVectorClocks(vectorClocks, Process.vectorClocks);
+    // Increment the timestamp vector
+    VectorClock.incrementByPort(port);
 
-    // Log and write message content
-    String logMessage = LogUtil.toStringWithTimestampVector(message.toLog(), Process.timestampVector);
-    LogUtil.log(logMessage);
-    LogUtil.writeLogToFile(logMessage, logFile);
-    LogUtil.writeLogToFile(logMessage, Process.centralLogFile);
+    // Merge the timestamp vector and the vector clocks
+    mergeTimestampVectorAndVectorClocks(timestampVector, vectorClocks);
+
+    // Log and write message
+    LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(
+            message,
+            Process.timestampVector,
+            logFile,
+            String.format("is delivered from port %s", message.getSenderPort()));
 
     // Deliver message(s) in the buffer that can be delivered
     if (!Process.buffer.isEmpty())
       deliverMessageFromBuffer();
   }
 
+  private void mergeTimestampVectorAndVectorClocks(List<Integer> timestampVector, List<VectorClock> vectorClocks) {
+    VectorClock.mergeTimestampVector(timestampVector, Process.timestampVector);
+    VectorClock.mergeVectorClocks(vectorClocks, Process.vectorClocks);
+  }
+
   private void deliverMessageFromBuffer() {
-    LogUtil.logWithCurrentTimestamp("Current buffer:\n%s", Process.buffer.stream().map(Message::toLog).reduce("", (acc, cur) -> acc + cur + "\n"));
     for (Message message : Process.buffer) {
       if (check(message)) {
-        LogUtil.logWithCurrentTimestamp("Delivering message %s from buffer", message.toLog());
+        LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(message, Process.timestampVector, logFile, "is delivered from buffer");
         Process.buffer.remove(message);
         deliver(message);
       }
     }
+    LogUtil.logWithSystemTimestamp("Current buffer: %s", Process.convertBufferToString());
   }
 }

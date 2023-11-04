@@ -44,6 +44,10 @@ public class Process {
     clients.putIfAbsent(port, client);
   }
 
+  public static String convertBufferToString() {
+    return buffer.isEmpty() ? "Empty" : Process.buffer.stream().map(Message::toLog).reduce("\n", (acc, cur) -> acc + cur + "\n");
+  }
+
   public static void main(String[] args) {
     int port = Integer.parseInt(args[0]);
     Process process = new Process(port);
@@ -75,7 +79,7 @@ public class Process {
   public static void createClients(Process process) {
     for (int existingPort : Configuration.PORTS) {
       if (existingPort != process.port) {
-        LogUtil.logWithCurrentTimestamp("Creating a client for port %s", existingPort);
+        LogUtil.log("Creating a client for port %s", existingPort);
         Socket socket = SocketUtil.createClientSocket(existingPort);
         if (socket != null) {
           Client client = new Client(process.port, existingPort, socket);
@@ -91,8 +95,8 @@ public class Process {
 
       int numberOfMessagesPerMinute = Configuration.randomNumberOfMessagesPerMinute();
       int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
-      LogUtil.logWithCurrentTimestamp("Number of messages per minute: %s", numberOfMessagesPerMinute);
-      LogUtil.logWithCurrentTimestamp("Sleep time between messages: %s ms", sleepTime);
+      LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
+      LogUtil.log("Sleep time between messages: %s ms", sleepTime);
 
       int[] sleepTimes = new int[numberOfMessagesPerMinute];
       Arrays.fill(sleepTimes, sleepTime);
