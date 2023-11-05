@@ -13,6 +13,7 @@ public class Configuration {
   public static int NUMBER_OF_PROCESSES;
   public static List<Integer> PORTS = new LinkedList<>();
   public static int NUMBER_OF_MESSAGES;
+  public static double MIN_SENDING_SPEED;
   public static String RUNNING_MODE;
   public static String DEMO_MODE = "demo";
   public static String EXAMPLE_MODE = "example";
@@ -23,7 +24,6 @@ public class Configuration {
     Yaml yaml = new Yaml();
     try (InputStream inputStream = new FileInputStream(CONFIG_FILE)) {
       Map<String, Object> yamlData = yaml.load(inputStream);
-      LogUtil.log("yamlData: %s", yamlData);
 
       if (yamlData != null) {
         RUNNING_MODE = (String) yamlData.get("mode");
@@ -31,20 +31,23 @@ public class Configuration {
         if (RUNNING_MODE.equals(DEMO_MODE)) {
           Map<String, Object> demo = (Map<String, Object>) yamlData.get("demo");
           NUMBER_OF_PROCESSES = (int) demo.get("numberOfProcesses");
-          LogUtil.log("NUMBER_OF_PROCESSES: %s", NUMBER_OF_PROCESSES);
+          LogUtil.log("Number of proceses: %s", NUMBER_OF_PROCESSES);
 
           NUMBER_OF_MESSAGES = (int) demo.get("numberOfMessages");
-          LogUtil.log("NUMBER_OF_MESSAGES: %s", NUMBER_OF_MESSAGES);
+          LogUtil.log("Number of messages: %s", NUMBER_OF_MESSAGES);
+
+          MIN_SENDING_SPEED = (double) demo.get("minimumSendingSpeed");
+          LogUtil.log("Minimum sending speed: %s", MIN_SENDING_SPEED);
         } else if (RUNNING_MODE.equals(EXAMPLE_MODE)) {
           Map<String, Object> example = (Map<String, Object>) yamlData.get("example");
           NUMBER_OF_PROCESSES = (int) example.get("numberOfProcesses");
-          LogUtil.log("NUMBER_OF_PROCESSES: %s", NUMBER_OF_PROCESSES);
+          LogUtil.log("umber of proceses: %s", NUMBER_OF_PROCESSES);
         }
 
         for (int i = 0; i < NUMBER_OF_PROCESSES; i++) {
           PORTS.add(i + 1);
         }
-        LogUtil.log("PORTS: %s", PORTS);
+        LogUtil.log("Ports: %s", PORTS);
       }
     } catch (Exception e) {
       LogUtil.log("Error(s) occurred while loading configs from %s: %s", CONFIG_FILE, e.getMessage());
@@ -61,7 +64,7 @@ public class Configuration {
   }
 
   public static int randomNumberOfMessagesPerMinute() {
-    return (int) (Math.random() * Configuration.NUMBER_OF_MESSAGES + Configuration.NUMBER_OF_MESSAGES / 5); // from NUMBER_OF_MESSAGES/5 to NUMBER_OF_MESSAGES
+    return (int) (Math.random() * NUMBER_OF_MESSAGES + NUMBER_OF_MESSAGES * MIN_SENDING_SPEED);
   }
 
   public static int calculateSleepTime(int numberOfMessagesPerMinute) {

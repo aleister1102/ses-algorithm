@@ -1,6 +1,7 @@
-mode: example # demo or example
+mode: demo # demo or example
 demo:
   numberOfProcesses: 10
-  numberOfMessages: 150
+  numberOfMessages: 20
+  minimumSendingSpeed: 0.7
 example:
   numberOfProcesses: 3
