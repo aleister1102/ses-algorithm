@@ -39,6 +39,9 @@ public class Client {
     LogUtil.logWithSystemTimestamp("%s of port %s is sending %s message(s) to port %s",
         currentThreadName, senderPort, numberOfMessages, receiverPort);
 
+    // Wait until have permission to send messages
+    waitToSend();
+
     try {
       if (socket.isConnected()) {
         for (int messageIndex = 1; messageIndex <= numberOfMessages; messageIndex++) {
@@ -72,15 +75,36 @@ public class Client {
           Thread.sleep(delays[messageIndex - 1]);
           bufferedWriter.flush();
         }
-
-        LogUtil.logWithSystemTimestamp("Port %s is done sending messages to port %s", senderPort, receiverPort);
-
-        // synchronized (Process.lock) {
-        // Process.portsUsed += 1;
-        // LogUtil.log("Number of ports used: %s", Process.portsUsed);
-        // }
       }
     } catch (IOException | InterruptedException exception) {
+      SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
+    }
+  }
+
+  private synchronized void waitToSend() {
+    while (!Process.canSendMessages) {
+      try {
+        Thread.sleep(5000);
+        LogUtil.log("Waiting until have enought permission to send messages");
+      } catch (InterruptedException exception) {
+        SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
+      }
+    }
+  }
+
+  public void sendNotifyMessage() {
+    String currentThreadName = Thread.currentThread().getName();
+    LogUtil.logWithSystemTimestamp("%s of port %s is sending notify message to port %s",
+        currentThreadName, senderPort, receiverPort);
+
+    try {
+      if (socket.isConnected()) {
+        Message notifyMessage = buildNotifyMessage();
+        bufferedWriter.write(notifyMessage.toString());
+        bufferedWriter.newLine();
+        bufferedWriter.flush();
+      }
+    } catch (Exception e) {
       SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
     }
   }
@@ -94,6 +118,14 @@ public class Client {
         .content(content)
         .timestampVector(timestampVector)
         .vectorClocks(vectorClocks)
+        .build();
+  }
+
+  private Message buildNotifyMessage() {
+    return Message.builder()
+        .senderPort(senderPort)
+        .receiverPort(receiverPort)
+        .content(Message.NOTIFY_MESSAGE)
         .build();
   }
 }

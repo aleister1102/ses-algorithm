@@ -1,6 +1,7 @@
 demo:
   numberOfProcesses: 10
-  numberOfMessages: 20
-  minimumSendingSpeed: 0.7
+  numberOfMessages: 150
+  minimumMessagesPerMinute: 20
+  maximumMessagesPerMinute: 30
 example:
   numberOfProcesses: 3

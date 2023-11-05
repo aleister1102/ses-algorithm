@@ -14,7 +14,7 @@ import java.util.ArrayList;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Message implements  Cloneable {
+public class Message implements Cloneable {
   private int senderPort;
   private int receiverPort;
   private String content;
@@ -28,6 +28,8 @@ public class Message implements  Cloneable {
   public static final String BUFFER = "buffer";
   public static final String SENDING = "sending";
 
+  public static final String NOTIFY_MESSAGE = "notify message";
+
   public String toString() {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
@@ -40,12 +42,12 @@ public class Message implements  Cloneable {
 
   public String toLog() {
     return String.format("[P%s -> P%s]: %s (timestamp: %s, clocks: %s, status: %s)",
-            senderPort,
-            receiverPort,
-            content,
-            timestampVector.toString(),
-            vectorClocks.toString(),
-            status);
+        senderPort,
+        receiverPort,
+        content,
+        timestampVector != null ? timestampVector.toString() : "",
+        vectorClocks != null ? vectorClocks.toString() : "",
+        status);
   }
 
   public static Message parse(String messageString) {
@@ -53,7 +55,8 @@ public class Message implements  Cloneable {
       ObjectMapper objectMapper = new ObjectMapper();
       return objectMapper.readValue(messageString, Message.class);
     } catch (JsonProcessingException e) {
-      LogUtil.log("Error(s) occurred while parsing message from client.\nOriginal message: %s.\nError message: %s", messageString, e.getMessage());
+      LogUtil.log("Error(s) occurred while parsing message from client.\nOriginal message: %s.\nError message: %s",
+          messageString, e.getMessage());
       return null;
     }
   }
@@ -72,5 +75,9 @@ public class Message implements  Cloneable {
     } catch (CloneNotSupportedException e) {
       throw new AssertionError();
     }
+  }
+
+  public static boolean isNotifyMessage(Message message) {
+    return message.getContent().equals(NOTIFY_MESSAGE);
   }
 }

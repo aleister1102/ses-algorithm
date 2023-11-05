@@ -14,7 +14,7 @@ running_mode="$2"
 folder_path="/home/aleister/Repos/ses-algorithm"
 
 # Loop through and open tabs
-for ((i = 1; i <= num_tabs; i++)); do
+for ((i = 0; i <= num_tabs; i++)); do
   # Calculate the command to be executed
   command="./gradlew process${i} -Prunning_mode=${running_mode}"
 

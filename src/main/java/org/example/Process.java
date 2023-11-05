@@ -32,7 +32,8 @@ public class Process {
   public static ArrayList<Integer> timestampVector;
   public static ArrayList<VectorClock> vectorClocks;
   public static ConcurrentLinkedQueue<Message> buffer;
-  // public static int portsUsed = 0;
+  public static ConcurrentLinkedQueue<Thread> sendingThreads;
+  public static boolean canSendMessages = false;
 
   // Lock for shared variables
   public static final Object lock = new Object();
@@ -46,6 +47,7 @@ public class Process {
     timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
     vectorClocks = new ArrayList<>();
     buffer = new ConcurrentLinkedQueue<>();
+    sendingThreads = new ConcurrentLinkedQueue<>();
     FileUtil.clearFile(FileUtil.setupLogFile(port));
   }
 
@@ -80,36 +82,49 @@ public class Process {
       // Open for connections
       ThreadUtil.start(server::open);
 
+      // Wait until all processes are ready
       LogUtil.log("Press any key to connect to other processes");
       scanner.nextLine();
 
       // Create a client for each existing port (except the current port)
       createClients(process);
 
-      // Wait for all processes to be connected
-      LogUtil.log("Press any key to send messages");
-      scanner.nextLine();
-      scanner.close();
-
-      // Run demo or example
-      if (runningMode.equals(Configuration.DEMO_MODE))
+      if (port == Configuration.CONTROLLER_PORT) {
+        LogUtil.log("Press any key to send notify messages");
+        scanner.nextLine();
+        scanner.close();
+        runController(process);
+      } else if (runningMode.equals(Configuration.DEMO_MODE)) {
         runDemo(process);
-      else if (runningMode.equals(Configuration.EXAMPLE_MODE))
+      } else if (runningMode.equals(Configuration.EXAMPLE_MODE)) {
         runExampleOne(process);
+      }
     }
   }
 
   private static void createClients(Process process) {
-    for (int existingPort : Configuration.PORTS) {
-      if (existingPort != process.port) {
-        LogUtil.log("Creating a client for port %s", existingPort);
-        Socket socket = SocketUtil.createClientSocket(existingPort);
+    for (int availablePort : Configuration.PORTS) {
+      if (availablePort != process.port && availablePort != Configuration.CONTROLLER_PORT) {
+        LogUtil.log("Creating a client for port %s", availablePort);
+        Socket socket = SocketUtil.createClientSocket(availablePort);
         if (socket != null) {
-          Client client = new Client(process.port, existingPort, socket);
-          process.addClient(existingPort, client);
+          Client client = new Client(process.port, availablePort, socket);
+          process.addClient(availablePort, client);
         }
       }
     }
+  }
+
+  private static void runController(Process process) {
+    for (var clientEntry : process.getClients().entrySet()) {
+      Client client = clientEntry.getValue();
+
+      // Send notification to other processes
+      Thread notifyThread = ThreadUtil.start(() -> client.sendNotifyMessage());
+      sendingThreads.add(notifyThread);
+    }
+
+    cleanupSendingThreads(process);
   }
 
   private static void runDemo(Process process) throws InterruptedException {
@@ -125,8 +140,10 @@ public class Process {
       int[] sleepTimes = new int[Configuration.NUMBER_OF_MESSAGES];
       Arrays.fill(sleepTimes, sleepTime);
       Thread sendingThread = ThreadUtil.start(() -> client.send(Configuration.NUMBER_OF_MESSAGES, sleepTimes));
-      sendingThread.wait();
+      sendingThreads.add(sendingThread);
     }
+
+    cleanupSendingThreads(process);
   }
 
   private static void runExampleOne(Process process) {
@@ -135,14 +152,28 @@ public class Process {
     Client clientWithPort3 = process.getClients().get(3);
 
     if (process.port == 2) {
-      ThreadUtil.start(() -> clientWithPort1.send(2, 7000, 3000));
+      sendingThreads.add(ThreadUtil.start(() -> clientWithPort1.send(2, 7000, 2000)));
       ThreadUtil.sleep(1000);
-      ThreadUtil.start(() -> clientWithPort3.send(1, 2000));
+      sendingThreads.add(ThreadUtil.start(() -> clientWithPort3.send(1, 2000)));
     } else if (process.port == 3) {
-      ThreadUtil.sleep(4000);
-      ThreadUtil.start(() -> clientWithPort1.send(1, 7000));
+      ThreadUtil.sleep(5000);
+      sendingThreads.add(ThreadUtil.start(() -> clientWithPort1.send(1, 7000)));
       ThreadUtil.sleep(1000);
-      ThreadUtil.start(() -> clientWithPort2.send(1, 1000));
+      sendingThreads.add(ThreadUtil.start(() -> clientWithPort2.send(1, 1000)));
+    }
+
+    cleanupSendingThreads(process);
+  }
+
+  private static void cleanupSendingThreads(Process process) {
+    for (Thread thread : sendingThreads) {
+      try {
+        thread.join();
+        thread.interrupt();
+        LogUtil.log("Thread %s of port %s is terminated", thread.getName(), process.port);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
   }
 }

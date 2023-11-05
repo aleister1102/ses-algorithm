@@ -39,7 +39,11 @@ public class ClientHandler implements Runnable {
 
         if (messageFromClient != null) {
           Optional.ofNullable(Message.parse(messageFromClient)).ifPresent((message) -> {
-            if (check(message, false))
+            // If receive a notify message, set canSendMessages to true
+            if (Message.isNotifyMessage(message)) {
+              LogUtil.logWithSystemTimestamp(message.toLog());
+              givePermissonToSendMessages();
+            } else if (check(message, false))
               deliver(message, false);
           });
         }
@@ -47,6 +51,11 @@ public class ClientHandler implements Runnable {
         SocketUtil.closeEverything(clientSocket, bufferedReader, bufferedWriter);
       }
     }
+  }
+
+  private synchronized void givePermissonToSendMessages() {
+    Process.canSendMessages = true;
+    LogUtil.logWithSystemTimestamp("Port %s can send messsages now", port);
   }
 
   private boolean check(Message message, boolean isInBuffer) {
@@ -79,7 +88,8 @@ public class ClientHandler implements Runnable {
     message.setStatus(Message.BUFFER);
     Process.buffer.add(message);
     LogUtil.logAndWriteByPort(port, "Message %s is buffered", message.toLog());
-    LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s\n", port, Process.convertBufferToString());
+    // LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s\n", port,
+    // Process.convertBufferToString());
   }
 
   private void deliver(Message message, boolean isFromBuffer) {
@@ -131,7 +141,8 @@ public class ClientHandler implements Runnable {
       boolean removed = Process.buffer.remove(messageToBeDelivered);
       if (removed) {
         LogUtil.logAndWriteByPort(port, "Message %s is removed from buffer", messageToBeDelivered.toLog());
-        LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s", port, Process.convertBufferToString());
+        // LogUtil.logWithSystemTimestamp("Current buffer of port %s: %s", port,
+        // Process.convertBufferToString());
 
         // Deliver the message
         messageToBeDelivered.setStatus(Message.DELIVERY);
