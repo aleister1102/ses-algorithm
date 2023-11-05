@@ -14,21 +14,19 @@ public class Configuration {
   public static List<Integer> PORTS = new LinkedList<>();
   public static int NUMBER_OF_MESSAGES;
   public static double MIN_SENDING_SPEED;
-  public static String RUNNING_MODE;
   public static String DEMO_MODE = "demo";
   public static String EXAMPLE_MODE = "example";
   public static final String LOCALHOST = "localhost";
   public static final String CONFIG_FILE = "src/main/resources/config.yml";
 
-  public static void loadConfigsFromYaml() {
+  public static void loadConfigsFromYaml(String runningMode) {
     Yaml yaml = new Yaml();
     try (InputStream inputStream = new FileInputStream(CONFIG_FILE)) {
       Map<String, Object> yamlData = yaml.load(inputStream);
 
       if (yamlData != null) {
-        RUNNING_MODE = (String) yamlData.get("mode");
 
-        if (RUNNING_MODE.equals(DEMO_MODE)) {
+        if (runningMode.equals(DEMO_MODE)) {
           Map<String, Object> demo = (Map<String, Object>) yamlData.get("demo");
           NUMBER_OF_PROCESSES = (int) demo.get("numberOfProcesses");
           LogUtil.log("Number of proceses: %s", NUMBER_OF_PROCESSES);
@@ -38,10 +36,10 @@ public class Configuration {
 
           MIN_SENDING_SPEED = (double) demo.get("minimumSendingSpeed");
           LogUtil.log("Minimum sending speed: %s", MIN_SENDING_SPEED);
-        } else if (RUNNING_MODE.equals(EXAMPLE_MODE)) {
+        } else if (runningMode.equals(EXAMPLE_MODE)) {
           Map<String, Object> example = (Map<String, Object>) yamlData.get("example");
           NUMBER_OF_PROCESSES = (int) example.get("numberOfProcesses");
-          LogUtil.log("umber of proceses: %s", NUMBER_OF_PROCESSES);
+          LogUtil.log("Number of proceses: %s", NUMBER_OF_PROCESSES);
         }
 
         for (int i = 0; i < NUMBER_OF_PROCESSES; i++) {
