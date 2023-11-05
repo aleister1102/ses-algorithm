@@ -1,7 +1,7 @@
 demo:
   numberOfProcesses: 10
   numberOfMessages: 150
-  minimumMessagesPerMinute: 20
-  maximumMessagesPerMinute: 30
+  minimumMessagesPerMinute: 30
+  maximumMessagesPerMinute: 50
 example:
   numberOfProcesses: 3

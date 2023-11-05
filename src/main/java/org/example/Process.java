@@ -93,7 +93,7 @@ public class Process {
     }
   }
 
-  private static void runController(Process process) {
+  private static void runController(Process process) throws InterruptedException {
     LogUtil.log("Press any key to connect to other processes");
     scanner.nextLine();
     createClients(process);
@@ -105,6 +105,7 @@ public class Process {
 
       // Send notification to other processes
       Thread notifyThread = ThreadUtil.start(() -> client.sendNotifyMessage(Message.ALLOW_CONNECT));
+      notifyThread.join();
       threads.add(notifyThread);
     }
 
