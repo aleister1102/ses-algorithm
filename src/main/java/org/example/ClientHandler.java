@@ -39,7 +39,7 @@ public class ClientHandler implements Runnable {
 
         if (messageFromClient != null) {
           Optional.ofNullable(Message.parse(messageFromClient)).ifPresent((message) -> {
-            if (check(message))
+            if (check(message, false))
               deliver(message, false);
           });
         }
@@ -49,7 +49,7 @@ public class ClientHandler implements Runnable {
     }
   }
 
-  private boolean check(Message message) {
+  private boolean check(Message message, boolean isInBuffer) {
     ArrayList<VectorClock> vectorClocks = message.getVectorClocks();
     VectorClock vectorClock = VectorClock.findByPort(vectorClocks, port);
 
@@ -61,7 +61,8 @@ public class ClientHandler implements Runnable {
       } else {
         // Buffer the message if the timestamp vector in the vector clock
         // is greater than the timestamp vector of the current process
-        bufferMessage(message);
+        if (!isInBuffer) // only buffer the message if it is not in the buffer
+          bufferMessage(message);
         return false;
       }
     } else {
@@ -94,30 +95,32 @@ public class ClientHandler implements Runnable {
 
     // Log and write message
     LogUtil.logAndWriteWithTimestampVectorAndSystemTimestamp(
-            message,
-            Process.timestampVector,
-            logFile,
-            isFromBuffer
-                    ? "is delivered from buffer"
-                    : String.format("is delivered from port %s", message.getSenderPort()));
+        message,
+        Process.timestampVector,
+        logFile,
+        isFromBuffer
+            ? "is delivered from buffer"
+            : String.format("is delivered from port %s", message.getSenderPort()));
 
     // Deliver message(s) in the buffer that can be delivered
     if (!Process.buffer.isEmpty())
       deliverMessageFromBuffer();
   }
 
-  private void mergeTimestampVectorAndVectorClocks(List<Integer> otherTimestampVector, List<VectorClock> otherVectorClocks) {
+  private void mergeTimestampVectorAndVectorClocks(List<Integer> otherTimestampVector,
+      List<VectorClock> otherVectorClocks) {
     List<Integer> timestampVectorCopy = new ArrayList<>(Process.timestampVector);
-    List<Integer> mergedTimestampVector = VectorClock.mergeTimestampVector(otherTimestampVector, Process.timestampVector);
+    List<Integer> mergedTimestampVector = VectorClock.mergeTimestampVector(otherTimestampVector,
+        Process.timestampVector);
     Process.timestampVector.clear();
     Process.timestampVector.addAll(mergedTimestampVector);
     LogUtil.logAndWriteByPort(port, "Merged timestamp vector %s and %s. Current timestamp vector of the process: %s",
-            otherTimestampVector, timestampVectorCopy, mergedTimestampVector);
+        otherTimestampVector, timestampVectorCopy, mergedTimestampVector);
 
     List<VectorClock> vectorClocksCopy = VectorClock.copyVectorClocksOfProcess();
     VectorClock.mergeVectorClocks(otherVectorClocks, Process.vectorClocks);
-    LogUtil.logAndWriteByPort(port, "Merging vector clocks %s into %s. Current vector clocks: %s",
-            otherVectorClocks, vectorClocksCopy, Process.vectorClocks);
+    LogUtil.logAndWriteByPort(port, "Merging timestamp vector %s into vector clocks %s. Current vector clocks: %s",
+        timestampVectorCopy, vectorClocksCopy, Process.vectorClocks);
   }
 
   private void deliverMessageFromBuffer() {
@@ -139,7 +142,7 @@ public class ClientHandler implements Runnable {
 
   private Message findMessageInBufferToBeDelivered() {
     for (Message message : Process.buffer) {
-      if (check(message)) {
+      if (check(message, true)) {
         return message;
       }
     }
