@@ -46,21 +46,23 @@ public class VectorClock {
         vectorClock1 -> vectorClock1.setTimestampVector(timestampVector),
         () -> vectorClocks.add(VectorClock.builder().port(receiverPort).timestampVector(timestampVector).build()));
 
-    LogUtil.logAndWriteByPort(senderPort,
-        "Update timestamp vector of port %s in vector clocks to %s. Current vector clocks: %s",
-        receiverPort, timestampVector, vectorClocks);
+    // LogUtil.logAndWriteByPort(senderPort,
+    // "Update timestamp vector of port %s in vector clocks to %s. Current vector
+    // clocks: %s",
+    // receiverPort, timestampVector, vectorClocks);
   }
 
   public boolean isTimestampVectorLessThanOrEqual(List<Integer> otherTimestampVector) {
     for (int i = 0; i < Configuration.NUMBER_OF_PROCESSES; i++) {
       if (timestampVector.get(i) > otherTimestampVector.get(i)) {
-        LogUtil.logAndWriteByPort(port, "Timestamp vector %s is not less than or equal the timestamp vector %s",
-            timestampVector, otherTimestampVector);
+        // LogUtil.logAndWriteByPort(port, "Timestamp vector %s is not less than or
+        // equal the timestamp vector %s",
+        // timestampVector, otherTimestampVector);
         return false;
       }
     }
-    LogUtil.logAndWriteByPort(port, "Timestamp vector %s <= timestamp vector %s",
-        timestampVector, otherTimestampVector);
+    // LogUtil.logAndWriteByPort(port, "Timestamp vector %s <= timestamp vector %s",
+    // timestampVector, otherTimestampVector);
     return true;
   }
 

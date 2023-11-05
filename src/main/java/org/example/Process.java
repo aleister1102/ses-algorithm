@@ -27,12 +27,14 @@ public class Process {
   private int port;
   private ServerSocket serverSocket;
   private Map<Integer, Client> clients;
+  private static final Scanner scanner = new Scanner(System.in);
 
   // Shared between threads
   public static ArrayList<Integer> timestampVector;
   public static ArrayList<VectorClock> vectorClocks;
   public static ConcurrentLinkedQueue<Message> buffer;
-  public static ConcurrentLinkedQueue<Thread> sendingThreads;
+  public static ConcurrentLinkedQueue<Thread> threads;
+  public static boolean canConnect = false;
   public static boolean canSendMessages = false;
 
   // Lock for shared variables
@@ -47,7 +49,7 @@ public class Process {
     timestampVector = new ArrayList<>(Collections.nCopies(Configuration.NUMBER_OF_PROCESSES, 0));
     vectorClocks = new ArrayList<>();
     buffer = new ConcurrentLinkedQueue<>();
-    sendingThreads = new ConcurrentLinkedQueue<>();
+    threads = new ConcurrentLinkedQueue<>();
     FileUtil.clearFile(FileUtil.setupLogFile(port));
   }
 
@@ -77,22 +79,11 @@ public class Process {
     // Create a server if the server socket is created successfully
     if (process.getServerSocket() != null) {
       Server server = new Server(process.getServerSocket());
-      Scanner scanner = new Scanner(System.in);
 
       // Open for connections
       ThreadUtil.start(server::open);
 
-      // Wait until all processes are ready
-      LogUtil.log("Press any key to connect to other processes");
-      scanner.nextLine();
-
-      // Create a client for each existing port (except the current port)
-      createClients(process);
-
       if (port == Configuration.CONTROLLER_PORT) {
-        LogUtil.log("Press any key to send notify messages");
-        scanner.nextLine();
-        scanner.close();
         runController(process);
       } else if (runningMode.equals(Configuration.DEMO_MODE)) {
         runDemo(process);
@@ -100,6 +91,79 @@ public class Process {
         runExampleOne(process);
       }
     }
+  }
+
+  private static void runController(Process process) {
+    LogUtil.log("Press any key to connect to other processes");
+    scanner.nextLine();
+    createClients(process);
+
+    LogUtil.log("Press any key to allow processes to connect to other processes");
+    scanner.nextLine();
+    for (var clientEntry : process.getClients().entrySet()) {
+      Client client = clientEntry.getValue();
+
+      // Send notification to other processes
+      Thread notifyThread = ThreadUtil.start(() -> client.sendNotifyMessage(Message.ALLOW_CONNECT));
+      threads.add(notifyThread);
+    }
+
+    LogUtil.log("Press any key to allow processes to send messages");
+    scanner.nextLine();
+    for (var clientEntry : process.getClients().entrySet()) {
+      Client client = clientEntry.getValue();
+
+      // Send notification to other processes
+      Thread notifyThread = ThreadUtil.start(() -> client.sendNotifyMessage(Message.ALLOW_SEND));
+      threads.add(notifyThread);
+    }
+
+    scanner.close();
+    cleanupSendingThreads(process);
+  }
+
+  private static void runDemo(Process process) throws InterruptedException {
+    Client.waitToConnect();
+    createClients(process);
+
+    Client.waitToSend();
+    for (var clientEntry : process.getClients().entrySet()) {
+      Client client = clientEntry.getValue();
+
+      int numberOfMessagesPerMinute = Configuration.randomNumberOfMessagesPerMinute();
+      int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
+      LogUtil.log("Prepare to send message to port %s", client.getReceiverPort());
+      LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
+      LogUtil.log("Sleep time between messages: %s ms", sleepTime);
+
+      int[] sleepTimes = new int[Configuration.NUMBER_OF_MESSAGES];
+      Arrays.fill(sleepTimes, sleepTime);
+      Thread sendingThread = ThreadUtil.start(() -> client.send(Configuration.NUMBER_OF_MESSAGES, sleepTimes));
+      threads.add(sendingThread);
+    }
+
+    cleanupSendingThreads(process);
+  }
+
+  private static void runExampleOne(Process process) {
+    Client.waitToConnect();
+    createClients(process);
+    Client clientWithPort1 = process.getClients().get(1);
+    Client clientWithPort2 = process.getClients().get(2);
+    Client clientWithPort3 = process.getClients().get(3);
+
+    if (process.port == 2) {
+      Client.waitToSend();
+      threads.add(ThreadUtil.start(() -> clientWithPort1.send(2, 7000, 2000)));
+      threads.add(ThreadUtil.start(() -> clientWithPort3.send(1, 2000)));
+    } else if (process.port == 3) {
+      Client.waitToSend();
+      ThreadUtil.sleep(5000);
+      threads.add(ThreadUtil.start(() -> clientWithPort1.send(1, 7000)));
+      threads.add(ThreadUtil.start(() -> clientWithPort2.send(1, 1000)));
+    }
+
+    cleanupSendingThreads(process);
   }
 
   private static void createClients(Process process) {
@@ -115,58 +179,8 @@ public class Process {
     }
   }
 
-  private static void runController(Process process) {
-    for (var clientEntry : process.getClients().entrySet()) {
-      Client client = clientEntry.getValue();
-
-      // Send notification to other processes
-      Thread notifyThread = ThreadUtil.start(() -> client.sendNotifyMessage());
-      sendingThreads.add(notifyThread);
-    }
-
-    cleanupSendingThreads(process);
-  }
-
-  private static void runDemo(Process process) throws InterruptedException {
-    for (var clientEntry : process.getClients().entrySet()) {
-      Client client = clientEntry.getValue();
-
-      int numberOfMessagesPerMinute = Configuration.randomNumberOfMessagesPerMinute();
-      int sleepTime = Configuration.calculateSleepTime(numberOfMessagesPerMinute);
-      LogUtil.log("Prepare to send message to port %s", client.getReceiverPort());
-      LogUtil.log("Number of messages per minute: %s", numberOfMessagesPerMinute);
-      LogUtil.log("Sleep time between messages: %s ms", sleepTime);
-
-      int[] sleepTimes = new int[Configuration.NUMBER_OF_MESSAGES];
-      Arrays.fill(sleepTimes, sleepTime);
-      Thread sendingThread = ThreadUtil.start(() -> client.send(Configuration.NUMBER_OF_MESSAGES, sleepTimes));
-      sendingThreads.add(sendingThread);
-    }
-
-    cleanupSendingThreads(process);
-  }
-
-  private static void runExampleOne(Process process) {
-    Client clientWithPort1 = process.getClients().get(1);
-    Client clientWithPort2 = process.getClients().get(2);
-    Client clientWithPort3 = process.getClients().get(3);
-
-    if (process.port == 2) {
-      sendingThreads.add(ThreadUtil.start(() -> clientWithPort1.send(2, 7000, 2000)));
-      ThreadUtil.sleep(1000);
-      sendingThreads.add(ThreadUtil.start(() -> clientWithPort3.send(1, 2000)));
-    } else if (process.port == 3) {
-      ThreadUtil.sleep(5000);
-      sendingThreads.add(ThreadUtil.start(() -> clientWithPort1.send(1, 7000)));
-      ThreadUtil.sleep(1000);
-      sendingThreads.add(ThreadUtil.start(() -> clientWithPort2.send(1, 1000)));
-    }
-
-    cleanupSendingThreads(process);
-  }
-
   private static void cleanupSendingThreads(Process process) {
-    for (Thread thread : sendingThreads) {
+    for (Thread thread : threads) {
       try {
         thread.join();
         thread.interrupt();

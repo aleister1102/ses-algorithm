@@ -28,7 +28,8 @@ public class Message implements Cloneable {
   public static final String BUFFER = "buffer";
   public static final String SENDING = "sending";
 
-  public static final String NOTIFY_MESSAGE = "notify message";
+  public static final String ALLOW_CONNECT = "allow connecting";
+  public static final String ALLOW_SEND = "allow sending message";
 
   public String toString() {
     try {
@@ -77,7 +78,11 @@ public class Message implements Cloneable {
     }
   }
 
-  public static boolean isNotifyMessage(Message message) {
-    return message.getContent().equals(NOTIFY_MESSAGE);
+  public static boolean isAllowConnecting(Message message) {
+    return message.getContent().equals(ALLOW_CONNECT);
+  }
+
+  public static boolean isAllowSendingMessage(Message message) {
+    return message.getContent().equals(ALLOW_SEND);
   }
 }

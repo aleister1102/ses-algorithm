@@ -34,13 +34,32 @@ public class Client {
     }
   }
 
+  public static synchronized void waitToConnect() {
+    while (!Process.canConnect) {
+      try {
+        Thread.sleep(5000);
+        LogUtil.log("Waiting until have enought permission to connect to other processes");
+      } catch (InterruptedException exception) {
+        LogUtil.log("Error(s) occurred while waiting to connect to other processes: %s", exception.getMessage());
+      }
+    }
+  }
+
+  public static synchronized void waitToSend() {
+    while (!Process.canSendMessages) {
+      try {
+        Thread.sleep(5000);
+        LogUtil.log("Waiting until have enought permission to send messages");
+      } catch (InterruptedException exception) {
+        LogUtil.log("Error(s) occurred while waiting to send messages: %s", exception.getMessage());
+      }
+    }
+  }
+
   public void send(int numberOfMessages, int... delays) {
     String currentThreadName = Thread.currentThread().getName();
     LogUtil.logWithSystemTimestamp("%s of port %s is sending %s message(s) to port %s",
         currentThreadName, senderPort, numberOfMessages, receiverPort);
-
-    // Wait until have permission to send messages
-    waitToSend();
 
     try {
       if (socket.isConnected()) {
@@ -81,25 +100,14 @@ public class Client {
     }
   }
 
-  private synchronized void waitToSend() {
-    while (!Process.canSendMessages) {
-      try {
-        Thread.sleep(5000);
-        LogUtil.log("Waiting until have enought permission to send messages");
-      } catch (InterruptedException exception) {
-        SocketUtil.closeEverything(socket, bufferedReader, bufferedWriter);
-      }
-    }
-  }
-
-  public void sendNotifyMessage() {
+  public void sendNotifyMessage(String content) {
     String currentThreadName = Thread.currentThread().getName();
     LogUtil.logWithSystemTimestamp("%s of port %s is sending notify message to port %s",
         currentThreadName, senderPort, receiverPort);
 
     try {
       if (socket.isConnected()) {
-        Message notifyMessage = buildNotifyMessage();
+        Message notifyMessage = buildNotifyMessage(content);
         bufferedWriter.write(notifyMessage.toString());
         bufferedWriter.newLine();
         bufferedWriter.flush();
@@ -121,11 +129,11 @@ public class Client {
         .build();
   }
 
-  private Message buildNotifyMessage() {
+  private Message buildNotifyMessage(String content) {
     return Message.builder()
         .senderPort(senderPort)
         .receiverPort(receiverPort)
-        .content(Message.NOTIFY_MESSAGE)
+        .content(content)
         .build();
   }
 }

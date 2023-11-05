@@ -1,8 +1,5 @@
 package org.example.utils;
 
-
-import org.example.constants.Configuration;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,7 +24,8 @@ public class FileUtil {
 
   public static void clearFile(File file) {
     try {
-      if (!file.exists()) return;
+      if (!file.exists())
+        return;
       FileWriter writer = new FileWriter(file);
       writer.write("");
       writer.close();
