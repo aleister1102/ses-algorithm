@@ -31,12 +31,17 @@ test {
     useJUnitPlatform()
 }
 
+ext {
+    running_mode = project.hasProperty('running_mode') ? project.getProperty('running_mode') : null
+}
+
+
 (1..10).each { number ->
     def taskName = "process${number}"
     tasks.register(taskName, JavaExec) {
         main = 'org.example.Process'
         classpath = sourceSets.main.runtimeClasspath
-        args = [number.toString()]
+        args = [number.toString(), running_mode]
         standardInput = System.in
     }
 }
